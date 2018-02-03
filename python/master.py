@@ -92,7 +92,7 @@ class Master:
             futures = [executor.submit(self.recieve_input, nodes) for nodes in self.datanodes]
             for future in as_completed(futures):
                 print("received " + future.result())
-                if future.result() == "_failure":
+                if future.result() == "_fail":
                     commit = False
         for nodes in self.datanodes:
             if commit == True:
