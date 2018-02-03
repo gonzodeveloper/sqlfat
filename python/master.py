@@ -43,6 +43,7 @@ class Master:
         self.sock.listen(5)
         while True:
             conn, addr = self.sock.accept()
+            print("Server: Connection from " + str(addr))
             conn.settimeout(300)
             try:
                 Thread(target=self.client_thread, args=(conn,)).start()
@@ -57,7 +58,7 @@ class Master:
         # more sophisticated query processing will go here later
         while master_active:
             orders = self.recieve_input(conn)
-
+            print("received orders")
             if "_quit" in orders:
                 conn.close()
                 master_active = False

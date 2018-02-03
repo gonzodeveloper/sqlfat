@@ -22,6 +22,7 @@ class DataNode:
         self.sock.listen(5)
         while True:
             conn, addr = self.sock.accept()
+            print("Server: Connection from " + str(addr))
             conn.settimeout(300)
             try:
                 Thread(target=self.master_thread, args=(conn,)).start()
@@ -67,6 +68,7 @@ class DataNode:
             print("Input exceeds buffer size")
 
         result = client_input.decode().rstrip()
+        print(result)
         return result
 
     def prep_transaction(self, database_conn, ddl):
