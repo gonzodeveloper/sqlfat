@@ -45,6 +45,7 @@ class DataNode:
                 if database_conn is not None:
                     database_conn.close()
                 db = re.sub("_use/", "", orders)
+                db = "/sqlfat/data/" + db
                 database_conn = sqlite3.connect(db)
                 print("created database")
 

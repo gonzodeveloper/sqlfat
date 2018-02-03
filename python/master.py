@@ -88,7 +88,7 @@ class Master:
         commit = True
         with ThreadPoolExecutor(max_workers=len(self.datanodes)) as executor:
             for nodes in self.datanodes:
-                nodes.send(message)
+                nodes.send(message.encode())
             futures = [executor.submit(self.recieve_input, nodes) for nodes in self.datanodes]
             for future in as_completed(futures):
                 if future.result() == "_failure":
