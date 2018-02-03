@@ -11,10 +11,8 @@ RUN yum install https://centos7.iuscommunity.org/ius-release.rpm -y \
     && yum install python36u -y \
     && yum install python36u-pip -y 
 
-RUN mkdir sqlfat \ 
-    && mkdir sqlfat/data 
-
-COPY ../python /sqlfat 
+ENV GIT_SSL_NO_VERIFY=true
+RUN git clone https://github.com/gonzodeveloper/sqlfat
 EXPOSE 50001
 
 CMD ["bin/bash"]

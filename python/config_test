@@ -1,0 +1,10 @@
+catalog.driver=com.ibm.db2.jcc.DB2Driver
+catalog.hostname=10.0.0.3:50001/mycatdb
+
+numnodes=2
+
+node1.driver=com.ibm.db2.jcc.DB2Driver
+node1.hostname=10.0.0.3:50001/mydb1
+
+node2.driver=com.ibm.db2.jcc.DB2Driver
+node2.hostname=10.0.0.3:50001/mydb2
