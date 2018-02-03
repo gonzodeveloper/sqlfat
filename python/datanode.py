@@ -53,13 +53,17 @@ class DataNode:
                 with Lock():
                     ddl_statement = re.sub("_ddl/", "", orders)
                     result = self.prep_transaction(database_conn, ddl_statement)
+                    print("prepping trans")
                     conn.send(result.encode())
                     # Wait for masters response
                     action = self.recieve_input(conn)
                     if "_commit" in action:
                         database_conn.commit()
+                        print("commit!")
+
                     elif "_abort" in action:
                         database_conn.rollback()
+                        print("abort!")
 
     def recieve_input(self, conn, BUFFER_SIZE = 1024):
         client_input = conn.recv(BUFFER_SIZE)

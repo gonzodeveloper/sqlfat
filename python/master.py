@@ -58,7 +58,7 @@ class Master:
         # more sophisticated query processing will go here later
         while master_active:
             orders = self.recieve_input(conn)
-            print("received orders:" + orders)
+            # print("received orders:" + orders)
             if "_quit" in orders:
                 conn.close()
                 master_active = False
@@ -76,7 +76,6 @@ class Master:
             print("sending message")
             nodes.send(message.encode())
 
-
     def quit(self):
         message = "_quit"
         for nodes in self.datanodes:
@@ -89,8 +88,10 @@ class Master:
         with ThreadPoolExecutor(max_workers=len(self.datanodes)) as executor:
             for nodes in self.datanodes:
                 nodes.send(message.encode())
+                print("sending prep")
             futures = [executor.submit(self.recieve_input, nodes) for nodes in self.datanodes]
             for future in as_completed(futures):
+                print("received " + future.result())
                 if future.result() == "_failure":
                     commit = False
         for nodes in self.datanodes:
