@@ -9,7 +9,7 @@ class Client:
         self.sock.connect((host, port))
 
     def use(self, db):
-        message = "_db/" + db
+        message = "_use/" + db
         self.sock.send(message.encode())
 
     def quit(self):
