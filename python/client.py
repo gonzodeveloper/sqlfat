@@ -1,32 +1,28 @@
-import socket as socket
-from threading import Thread
-import re
+import socket
 
 class Client:
 
-    def __init__(self, config):
-        with open(config) as file:
-            read_data = file.read()
-        read_data = re.split('\n\n', read_data)
+    def __init__(self, host, port):
+        self.host = host
+        self.port = int(port)
+        self.sock = socket.socket()
+        self.sock.connect((host, port))
 
-        addrPattern = re.compile('\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}:\d{1,5}')
-        ipPattern = re.compile('\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}')
-        address = re.findall(addrPattern, read_data[0])[0]
+    def use(self, db):
+        message = "_db/" + db
+        self.sock.send(message.encode())
+    def quit(self):
+        self.sock.send("_quit".encode())
+    def transaction(self, statement):
+        message = "_ddl/" + statement
+        self.sock.send(message.encode())
+        self.sock.close()
 
-        self.configserver = re.split(':', address)[0]
-        port = re.split(':', address)[1]
-
-        self.datanodes = []
-        for lines in read_data[2:]:
-            ip = re.search(ipPattern, lines)[0]
-'''         
-    def connect(self):
-        for nodes in datanodes:
-            Tread
-'''
+    def execute(self, query):
+        self.sock.send(query.encode())
+    def close(self):
 if __name__ == '__main__':
-    client = Client("config_test")
-
+    
 
 
 

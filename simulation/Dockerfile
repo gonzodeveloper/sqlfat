@@ -13,6 +13,6 @@ RUN yum install https://centos7.iuscommunity.org/ius-release.rpm -y \
 
 ENV GIT_SSL_NO_VERIFY=true
 RUN git clone https://github.com/gonzodeveloper/sqlfat
-EXPOSE 50001
+EXPOSE 50000 50001
 
 CMD ["bin/bash"]
