@@ -35,7 +35,7 @@ class DataNode:
 
         while master_active:
             orders = self.recieve_input(conn)
-
+            print("recieved orders")
             if "_quit" in orders:
                 conn.close()
                 master_active = False
@@ -45,6 +45,7 @@ class DataNode:
                     database_conn.close()
                 db = re.sub("_use/", "", orders)
                 database_conn = sqlite3.connect(db)
+                print("created database")
 
             elif "_ddl/" in orders:
                 with Lock():

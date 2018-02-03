@@ -11,8 +11,10 @@ class Client:
     def use(self, db):
         message = "_db/" + db
         self.sock.send(message.encode())
+
     def quit(self):
         self.sock.send("_quit".encode())
+
     def transaction(self, statement):
         message = "_ddl/" + statement
         self.sock.send(message.encode())
@@ -20,9 +22,7 @@ class Client:
 
     def execute(self, query):
         self.sock.send(query.encode())
-    def close(self):
-if __name__ == '__main__':
-    
+
 
 
 

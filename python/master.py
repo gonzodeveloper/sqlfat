@@ -30,14 +30,13 @@ class Master:
         node_addr = re.search(addr_pattern, read_data[0])[0]
         node_port = int(re.split(":", node_addr)[1])
 
-        print(node_port)
-
         # Get a list containing socket connections to all datanodes
         self.datanodes = []
         for lines in read_data[2:]:
             ip = re.search(ip_pattern, lines)[0]
             sock = socket.socket()
             sock.connect((ip, node_port))
+            print("Connected to : " + ip + ":" + str(node_port))
             self.datanodes.append(sock)
 
     def listen(self):
@@ -65,6 +64,7 @@ class Master:
             elif "_use/" in orders:
                 db = re.sub("_use/", "", orders)
                 self.use(db)
+                print("sent orders")
             elif "_ddl/" in orders:
                 transaction = re.sub("_ddl/", "", orders)
                 self.ddl(transaction)
