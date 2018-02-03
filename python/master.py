@@ -58,7 +58,7 @@ class Master:
         # more sophisticated query processing will go here later
         while master_active:
             orders = self.recieve_input(conn)
-            print("received orders")
+            print("received orders:" + orders)
             if "_quit" in orders:
                 conn.close()
                 master_active = False
@@ -73,12 +73,14 @@ class Master:
     def use(self, database):
         message = "_use/" + database
         for nodes in self.datanodes:
+            print("sending message")
             nodes.send(message.encode())
+
 
     def quit(self):
         message = "_quit"
         for nodes in self.datanodes:
-            nodes.send(message.encode)
+            nodes.send(message.encode())
             nodes.close()
 
     def ddl(self, statement):
