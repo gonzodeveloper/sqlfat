@@ -36,7 +36,6 @@ class DataNode:
 
         while master_active:
             orders = self.recieve_input(conn)
-            print("recieved orders")
             if "_quit" in orders:
                 conn.close()
                 master_active = False
@@ -47,23 +46,23 @@ class DataNode:
                 db = re.sub("_use/", "", orders)
                 db = "/sqlfat/data/" + db
                 database_conn = sqlite3.connect(db)
-                print("created database")
+                print("Using database: " + db)
 
             elif "_ddl/" in orders:
                 with Lock():
                     ddl_statement = re.sub("_ddl/", "", orders)
                     result = self.prep_transaction(database_conn, ddl_statement)
-                    print("prepping trans")
+                    print("Prepping transaction: " + ddl_statement)
                     conn.send(result.encode())
                     # Wait for masters response
                     action = self.recieve_input(conn)
                     if "_commit" in action:
                         database_conn.commit()
-                        print("commit!")
+                        print("Committed Transaction")
 
                     elif "_abort" in action:
                         database_conn.rollback()
-                        print("abort!")
+                        print("Aborted Transaction")
 
     def recieve_input(self, conn, BUFFER_SIZE = 1024):
         client_input = conn.recv(BUFFER_SIZE)
@@ -80,9 +79,9 @@ class DataNode:
         curs = database_conn.cursor()
         try:
             curs.execute(ddl)
-            return "_success"
+            return "_success/" + self.host
         except sqlite3.Error:
-            return "_fail"
+            return "_fail/" + self.host
 
 
 if __name__ == '__main__':

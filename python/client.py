@@ -14,11 +14,11 @@ class Client:
 
     def quit(self):
         self.sock.send("_quit".encode())
+        self.sock.close()
 
     def transaction(self, statement):
         message = "_ddl/" + statement
         self.sock.send(message.encode())
-        self.sock.close()
 
     def execute(self, query):
         self.sock.send(query.encode())

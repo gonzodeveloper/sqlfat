@@ -52,20 +52,19 @@ class Master:
                 traceback.print_exc()
 
     def client_thread(self, conn):
-        master_active = True
+        client_active = True
         database_conn = None
 
         # more sophisticated query processing will go here later
-        while master_active:
+        while client_active:
             orders = self.recieve_input(conn)
             # print("received orders:" + orders)
             if "_quit" in orders:
                 conn.close()
-                master_active = False
+                client_active = False
             elif "_use/" in orders:
                 db = re.sub("_use/", "", orders)
                 self.use(db)
-                print("sent orders")
             elif "_ddl/" in orders:
                 transaction = re.sub("_ddl/", "", orders)
                 self.ddl(transaction)
@@ -73,7 +72,7 @@ class Master:
     def use(self, database):
         message = "_use/" + database
         for nodes in self.datanodes:
-            print("sending message")
+            print("Using database: " + database)
             nodes.send(message.encode())
 
     def quit(self):
@@ -88,13 +87,15 @@ class Master:
         with ThreadPoolExecutor(max_workers=len(self.datanodes)) as executor:
             for nodes in self.datanodes:
                 nodes.send(message.encode())
-                print("sending prep")
             futures = [executor.submit(self.recieve_input, nodes) for nodes in self.datanodes]
             for future in as_completed(futures):
-                print("received " + future.result())
+                result = future.result()
+                host = re.split("/", result)[1]
                 if "_fail" in future.result():
+                    print("Transaction failure at host: " + host)
                     commit = False
-                    print(commit)
+                elif "_success" in future.result():
+                    print("Transaction success at host" + host)
         for nodes in self.datanodes:
             if commit == True:
                 self.transact("_commit")
@@ -123,5 +124,5 @@ if __name__ == '__main__':
         print(usage)
         exit(1)
     master = Master(sys.argv[1], sys.argv[2], sys.argv[3])
-    print("listern")
+    print("Master Up!")
     master.listen()
