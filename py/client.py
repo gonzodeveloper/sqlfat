@@ -16,7 +16,6 @@ class Client:
     def quit(self):
         self.sock.send("_quit".encode())
         response =  self.sock.recv(1024).decode()
-        self.sock.recv(1024).decode()
         return response
 
     def transaction(self, statement):
