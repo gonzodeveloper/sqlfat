@@ -73,7 +73,7 @@ class Master:
             elif "_ddl/" in orders:
                 transaction = re.sub("_ddl/", "", orders)
                 response = self.ddl(transaction)
-            self.sock.send(response.encode())
+            conn.send(response.encode())
 
     def use(self, database):
         message = "_use/" + database

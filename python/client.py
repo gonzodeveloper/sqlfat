@@ -11,21 +11,21 @@ class Client:
     def use(self, db):
         message = "_use/" + db
         self.sock.send(message.encode())
-        return self.sock.recv(message).decode()
+        return self.sock.recv(1024).decode()
 
     def quit(self):
         self.sock.send("_quit".encode())
         self.sock.close()
-        return self.sock.recv(message).decode()
+        return self.sock.recv(1024).decode()
 
     def transaction(self, statement):
         message = "_ddl/" + statement
         self.sock.send(message.encode())
-        return self.sock.recv(message).decode()
+        return self.sock.recv(1024).decode()
 
     def execute(self, query):
         self.sock.send(query.encode())
-        return self.sock.recv(message).decode()
+        return self.sock.recv(1024).decode()
 
 
 
