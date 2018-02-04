@@ -62,8 +62,11 @@ class Master:
             orders = self.recieve_input(conn)
             # print("received orders:" + orders)
             if "_quit" in orders:
+                catalog.commit()
                 catalog.close()
+                print("Closed DB")
                 response = self.quit()
+
                 client_active = False
             elif "_use/" in orders:
                 db = re.sub("_use/", "", orders)
