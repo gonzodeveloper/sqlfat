@@ -111,7 +111,7 @@ class Master:
                     print(host)
                     id = int(re.sub("200.0.0.1", "", str(host)))
                     catalog.execute("INSERT INTO dtables (tname, nodeurl, nodeid) "
-                                    "VALUES ({}, {}, {})".format(table, host, id))
+                                    "VALUES (\"{}\", \"{}\", {})".format(table, host, id))
             else:
                 self.transact("_abort")
         if commit == True:
