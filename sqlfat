@@ -1,6 +1,15 @@
 #!/usr/bin/python3
+#
+# Kyle Hart
+# 3 February 2018
+#
+# Project: sqlfat
+# File: sqlfat
+# Description: Executable interface for sqlfat parallel database.
 
 import sys
+import readline
+
 usage = "sqlfat [host] [port]"
 if len(sys.argv) < 2:
     print(usage)
@@ -10,11 +19,11 @@ from py.client import Client
 import re
 
 print("Welcome to SQLfat, a parallel database management system built around SQLite")
+
 client = Client(sys.argv[1])
 print("Connected to master node at " + client.host + ":" + str(client.port))
 
 statement = ""
-
 while "_quit" not in statement:
     statement = input(">>>> ")
     if "_quit" in statement:

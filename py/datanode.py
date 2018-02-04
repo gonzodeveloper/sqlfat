@@ -1,3 +1,10 @@
+# Kyle Hart
+# 3 February 2018
+#
+# Project: sqlfat
+# File: datanode.py
+# Description: datanode for the sqlfat parallel database
+
 import socket
 from threading import Thread, Lock
 import sqlite3
@@ -7,10 +14,26 @@ import re
 
 
 class DataNode:
+    '''
+    The datanodes are stood up to get a connection from the master node and execute queries and transactions in accordance
+    with orders from the master. The datanodes maintain the parallel database in sqlite db files, and through an active
+    socket connection with the master they essentially daemonize the normally static sqlite. Because the sql parsing and
+    query execution plan are controlled by the master, the datanodes are essentially dumb--they execute sql and return
+    the results. However, with transactional statements, the nodes only must report the status of their initial execution
+    back to the master and wait for his final orders for commit. Each datanode is multithreaded such that they can
+    concurrently handle multiple connections, this allows for a multi-master architecture.
+    '''
 
     def __init__(self, host, port):
+        '''
+        Stand up a datanode with a tcp socket listening for connection from the master node
+        :param host: ip/hostname of datanode
+        :param port: port to listen for connection
+        '''
         self.host = host
         self.port = int(port)
+
+        # Create socket to listen for master node's connection
         self.sock = socket.socket()
         try:
             self.sock.bind((self.host, self.port))
@@ -19,11 +42,17 @@ class DataNode:
             exit(1)
 
     def listen(self):
+        '''
+        Wait to establish connection with the master node, upon connection create a new thread to handle that master.
+        :return:
+        '''
         self.sock.listen(5)
         while True:
             conn, addr = self.sock.accept()
             print("Server: Connection from " + str(addr))
-            conn.settimeout(300)
+            # Times out after an hour
+            conn.settimeout(6000)
+            # Once connected, open new thread
             try:
                 Thread(target=self.master_thread, args=(conn,)).start()
             except:
@@ -31,15 +60,23 @@ class DataNode:
                 traceback.print_exc()
 
     def master_thread(self, conn):
+        '''
+        Wait for orders from master: _quit, _use, or _ddl. Respectively these will prompt the datanode to either quit
+        the connection, use a new database, or execute a transactional statement. With the transaction the datanode will
+        try an initial execution and report failure or success back to the master, once the master gets status from all
+        datanodes it will send back a message to either commit or abort that transaction.
+        :param conn: socket connection to the master.
+        :return:
+        '''
         master_active = True
         database_conn = None
-
+        # Wait for orders from the master
         while master_active:
             orders = self.recieve_input(conn)
             if "_quit" in orders:
                 conn.close()
                 master_active = False
-
+            # Get a sqlite connection to the new database, close any other connection that might be open
             elif "_use/" in orders:
                 if database_conn is not None:
                     database_conn.close()
@@ -47,8 +84,9 @@ class DataNode:
                 db = "/sqlfat/data/" + db
                 database_conn = sqlite3.connect(db)
                 print("Using database: " + db)
-
+            # Execute ddl statement
             elif "_ddl/" in orders:
+                # No other transactions during 2 phase commit
                 with Lock():
                     ddl_statement = re.sub("_ddl/", "", orders)
                     result = self.prep_transaction(database_conn, ddl_statement)
@@ -65,6 +103,12 @@ class DataNode:
                         print("Aborted Transaction")
 
     def recieve_input(self, conn, BUFFER_SIZE = 1024):
+        '''
+        Wrapper function for recieving input. Ensures we do not exceed given buffer size.
+        :param conn: socket connection
+        :param BUFFER_SIZE: byte limit for message
+        :return: message received
+        '''
         client_input = conn.recv(BUFFER_SIZE)
         input_size = sys.getsizeof(client_input)
 
@@ -76,6 +120,12 @@ class DataNode:
         return result
 
     def prep_transaction(self, database_conn, ddl):
+        '''
+        Initial execution of transaction in 2 phase commit. Report success or failure.
+        :param database_conn: connection to sqlite db file
+        :param ddl: ddl statement
+        :return: success or failure of initial transaction
+        '''
         curs = database_conn.cursor()
         try:
             curs.execute(ddl)
