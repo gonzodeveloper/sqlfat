@@ -108,7 +108,8 @@ class Master:
                 if "CREATE TABLE" in statement:
                     table = re.split(" ", statement)[2]
                     (host, port) = nodes.getpeername()
-                    id = int(re.split("node", "", host))
+                    print(host)
+                    id = int(re.sub("node", "", str(host)))
                     catalog.execute("INSERT INTO dtables (tname, nodeurl, nodeid) "
                                     "VALUES ({}, {}, {})".format(table, host, id))
             else:
