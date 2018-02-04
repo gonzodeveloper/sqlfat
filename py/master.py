@@ -109,7 +109,7 @@ class Master:
                     table = re.split(" ", statement)[2]
                     (host, port) = nodes.getpeername()
                     print(host)
-                    id = int(re.sub("node", "", str(host)))
+                    id = int(re.sub("200.0.0.1", "", str(host)))
                     catalog.execute("INSERT INTO dtables (tname, nodeurl, nodeid) "
                                     "VALUES ({}, {}, {})".format(table, host, id))
             else:
