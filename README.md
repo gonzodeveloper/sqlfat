@@ -3,7 +3,7 @@
 
 SQLFat a fully parallel database built on top of SQLite using the socket and multithreading modules within Python 3. For now SQLFat is built with a single-master multi-worker architecture. While the master handles client connections, parses SQL, builds a Query Execution Plan (QEP) and maintains ACID transaction properties, the workers (data nodes) maintain the database in SQLite db files according to the partitioning and repication scheme determined by the master.
 
-**Installation **
+**Installation**
 
 For a full install, copy this directory to each of the nodes for the database, ensure both sqlite3 and the proper python packages are installed. In the config_test file ensure that you enter in the correct IP addresses and port numbers for your nodes (by convention the master node will listen on port 50000 and the data nodes will listen on port 50001). Then you can start up the data nodes and the master node (IN THAT ORDER!)
 
