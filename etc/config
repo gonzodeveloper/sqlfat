@@ -1,0 +1,14 @@
+catalog.driver=com.ibm.db2.jcc.DB2Driver
+catalog.hostname=200.0.0.10:50000
+
+numnodes=3
+
+node1.driver=com.ibm.db2.jcc.DB2Driver
+node1.hostname=200.0.0.11:50001
+
+node2.driver=com.ibm.db2.jcc.DB2Driver
+node2.hostname=200.0.0.12:50001
+
+node3.driver=com.ibm.db2.jcc.DB2Driver
+node3.hostname=200.0.0.13:50001
+
