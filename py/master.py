@@ -107,9 +107,10 @@ class Master:
                 self.transact("_commit")
                 if "CREATE TABLE" in statement:
                     table = re.split(" ", statement)[2]
-                    id = int(re.split("node", "", str(nodes.getpeername())))
+                    (host, port) = nodes.getpeername()
+                    id = int(re.split("node", "", host))
                     catalog.execute("INSERT INTO dtables (tname, nodeurl, nodeid) "
-                                    "VALUES ({}, {}, {})".format(table, nodes.getpeername(),id ))
+                                    "VALUES ({}, {}, {})".format(table, host, id))
             else:
                 self.transact("_abort")
         if commit == True:
