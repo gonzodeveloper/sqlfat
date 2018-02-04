@@ -15,7 +15,6 @@ class Master:
 
         self.sock = socket.socket()
         self.sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-        self.catalog = sqlite3.connect("/sqlfat/data/catalog.db")
 
         try:
             self.sock.bind((self.host, self.port))
@@ -57,7 +56,7 @@ class Master:
     def client_thread(self, conn):
         client_active = True
         database_conn = None
-
+        catalog = sqlite3.connect("/sqlfat/data/catalog.db")
         # more sophisticated query processing will go here later
         while client_active:
             orders = self.recieve_input(conn)
@@ -66,13 +65,12 @@ class Master:
                 self.catalog.close()
                 response = self.quit()
                 client_active = False
-                conn.close()
             elif "_use/" in orders:
                 db = re.sub("_use/", "", orders)
                 response = self.use(db)
             elif "_ddl/" in orders:
                 transaction = re.sub("_ddl/", "", orders)
-                response = self.ddl(transaction)
+                response = self.ddl(transaction, catalog)
             conn.send(response.encode())
 
     def use(self, database):
@@ -88,7 +86,7 @@ class Master:
             nodes.close()
         return "Closing connection"
 
-    def ddl(self, statement):
+    def ddl(self, statement, catalog):
         message = "_ddl/" + statement
         commit = True
         response = ""
@@ -107,6 +105,11 @@ class Master:
         for nodes in self.datanodes:
             if commit == True:
                 self.transact("_commit")
+                if "CREATE TABLE" in statement:
+                    table = re.split(" ", statement)[2]
+                    id = int(re.split("node", "", str(nodes.getpeername())))
+                    catalog.execute("INSERT INTO dtables (tname, nodeurl, nodeid) "
+                                    "VALUES ({}, {}, {})".format(table, nodes.getpeername(),id ))
             else:
                 self.transact("_abort")
         if commit == True:

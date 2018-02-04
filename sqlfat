@@ -1,0 +1,29 @@
+#!/usr/bin/python3
+
+import sys
+usage = "sqlfat [host] [port]"
+if len(sys.argv) < 2:
+    print(usage)
+    exit(1)
+
+from py.client import Client
+import re
+
+print("Welcome to SQLfat, a parallel database management system built around SQLite")
+client = Client(sys.argv[1])
+print("Connected to master node at " + client.host + ":" + str(client.port))
+
+statement = ""
+
+while "_quit" not in statement:
+    statement = input(">>>> ")
+    if "_quit" in statement:
+        print(client.quit())
+        print("Goodbye!")
+        exit(0)
+    elif "_use" in statement:
+        db = re.sub("_use ", "", statement)
+        print(client.use(db))
+    else :
+        print(client.transaction(statement))
+

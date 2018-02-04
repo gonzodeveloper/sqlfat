@@ -2,7 +2,7 @@ import socket
 
 class Client:
 
-    def __init__(self, host, port):
+    def __init__(self, host, port=50000):
         self.host = host
         self.port = int(port)
         self.sock = socket.socket()
@@ -15,8 +15,9 @@ class Client:
 
     def quit(self):
         self.sock.send("_quit".encode())
-        self.sock.close()
-        return self.sock.recv(1024).decode()
+        response =  self.sock.recv(1024).decode()
+        self.sock.recv(1024).decode()
+        return response
 
     def transaction(self, statement):
         message = "_ddl/" + statement
