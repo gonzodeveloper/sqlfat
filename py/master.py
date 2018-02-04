@@ -62,7 +62,7 @@ class Master:
             orders = self.recieve_input(conn)
             # print("received orders:" + orders)
             if "_quit" in orders:
-                self.catalog.close()
+                catalog.close()
                 response = self.quit()
                 client_active = False
             elif "_use/" in orders:
@@ -108,7 +108,6 @@ class Master:
                 if "CREATE TABLE" in statement:
                     table = re.split(" ", statement)[2]
                     (host, port) = nodes.getpeername()
-                    print(host)
                     id = int(re.sub("200.0.0.1", "", str(host)))
                     catalog.execute("INSERT INTO dtables (tname, nodeurl, nodeid) "
                                     "VALUES (\"{}\", \"{}\", {})".format(table, host, id))
