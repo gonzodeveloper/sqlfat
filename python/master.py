@@ -14,6 +14,9 @@ class Master:
         self.port = int(port)
 
         self.sock = socket.socket()
+        self.sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        self.catalog = sqlite3.connect("/sqlfat/data/catalog.db")
+
         try:
             self.sock.bind((self.host, self.port))
         except socket.error:
@@ -60,30 +63,35 @@ class Master:
             orders = self.recieve_input(conn)
             # print("received orders:" + orders)
             if "_quit" in orders:
-                conn.close()
+                self.catalog.close()
+                response = self.quit()
                 client_active = False
+                conn.close()
             elif "_use/" in orders:
                 db = re.sub("_use/", "", orders)
-                self.use(db)
+                response = self.use(db)
             elif "_ddl/" in orders:
                 transaction = re.sub("_ddl/", "", orders)
-                self.ddl(transaction)
+                response = self.ddl(transaction)
+            self.sock.send(response.encode())
 
     def use(self, database):
         message = "_use/" + database
         for nodes in self.datanodes:
-            print("Using database: " + database)
             nodes.send(message.encode())
+        return "Using database: " + database
 
     def quit(self):
         message = "_quit"
         for nodes in self.datanodes:
             nodes.send(message.encode())
             nodes.close()
+        return "Closing connection"
 
     def ddl(self, statement):
         message = "_ddl/" + statement
         commit = True
+        response = ""
         with ThreadPoolExecutor(max_workers=len(self.datanodes)) as executor:
             for nodes in self.datanodes:
                 nodes.send(message.encode())
@@ -92,20 +100,26 @@ class Master:
                 result = future.result()
                 host = re.split("/", result)[1]
                 if "_fail" in future.result():
-                    print("Transaction failure at host: " + host)
+                    response += "Transaction failure at host: " + host + "\n"
                     commit = False
                 elif "_success" in future.result():
-                    print("Transaction success at host" + host)
+                    response += "Transaction success at host: " + host + "\n"
         for nodes in self.datanodes:
             if commit == True:
                 self.transact("_commit")
             else:
                 self.transact("_abort")
+        if commit == True:
+            response += "Committed"
+        else:
+            response += "Aborted"
+        return response
 
     def transact(self, status):
         message = status
         for nodes in self.datanodes:
             nodes.send(message.encode())
+
 
     def recieve_input(self, conn, BUFFER_SIZE = 1024):
         client_input = conn.recv(BUFFER_SIZE)
