@@ -29,7 +29,7 @@ elif [ "$action" == "start" ]; then
     echo "Node2 up..."
     docker exec -i node3 python3.6 sqlfat/py/datanode.py node3 50001 &
     echo "Node3 up..."
-    docker exec -i master python3.6 sqlfat/py/master.py master 50000 sqlfat/etc/config_test &
+    docker exec -i master python3.6 sqlfat/py/master.py master 50000 sqlfat/etc/config &
     echo "Master up..."
     
 elif [ "$action" == "stop" ]; then
