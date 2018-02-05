@@ -48,6 +48,10 @@ Similar to SQLite we can enter commands prefixed by an underscore. For instance 
 
 Otherwise SQL statements can be entered directly. For now the statements must be entered in one line, and do not need to be terminated with a semicolon. In the next version this should be fixed ad the interface should work in a more traditional fashion. 
 
+The client will print status messages for every command or SQL statement executed on the cluster.
+
+Additionally, this package includes a python connector class for the sqlfat database (client.py). Like any traditional database connector, the client can get a connection and execute sql statements via simple commands-- use(), execute(), transaction(), quit(). However, for the time being this class does not include a cursor and this cannot retrieve the results of queries. This will be fixed soon.
+
 
 ### Technical Details
 
@@ -66,10 +70,22 @@ The master node also maintains a catalog database which holds metadata on all ta
 
 The configuration file for the cluster resides in the "etc" directory and it contains information on all the addresses and port numbers of all data nodes. For backward compatability, each entry for the config file must also contain the database drivers used for each node, though this information is not touched by the sqlfat system. In future configurations we can will also store the address information on each master node so we can run remote catalog updates.
 
-**Transactions
+**Transactions**
 
 As a fully parallel RDBMS sqlfat ensures ACID property compliance for each transaction. This is accomplished through a two-phase transactional protocol. 
 
 ![](https://raw.githubusercontent.com/gonzodeveloper/sqlfat/master/img/commit.png)
 
 Once the master recieves a transaction from the client, it preforms the necessary processing (i.e.indexing/partitioning) then forwards the transaction to the data nodes. The datanodes begin their work by aquiring a lock, performing an intial execution and reporting success or failure back to the master. Once the master has recieved status reports from all the nodes it sends back a commit or abort message accordingly (only commit if all node succeeded in their first transaction). Once this is complete, the lock is released.  
+
+### Furure Woek
+
+Additional work needs to be done on this project before we can say it has full functionality. 
+
+- SQL processing with ANTLR
+- Partitioning tables accross nodes
+- Query processing
+- Parallel join algorithm
+- Multi-master finctionality
+- Basic security
+- Improved terminal interface.
