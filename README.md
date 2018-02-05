@@ -26,8 +26,11 @@ Then
 In the case that you do not have your own cluster of machines you can try out sqlfat with a Dockerized cluster provided in this package. The cluster is built on top of the centos official docker image. To stand up the cluster enter the following commands.
 
 > cd simulation
+
 > chmod a+x cluster
+
 > ./cluster build
+
 > ./cluster start
 
 To stop the cluster (and remove the containers)
@@ -42,6 +45,7 @@ This docker cluster has 1 master and 3 datanodes. The master accepts connections
 Once installation is complete we can connect to our cluster with the client.
 
 > chmod a+x sqlfat
+
 > ./sqlfat 200.0.0.10
 
 Similar to SQLite we can enter commands prefixed by an underscore. For instance **_use** will specify which database to use. **_quit** will quit the client. Otherwise SQL statements can be entered directly.
