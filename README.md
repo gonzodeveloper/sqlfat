@@ -8,10 +8,10 @@ SQLFat a fully parallel database built on top of SQLite using the socket and mul
 For a full install, copy this directory to each of the nodes for the database, ensure both sqlite3 and the proper python packages are installed. In the config_test file ensure that you enter in the correct IP addresses and port numbers for your nodes (by convention the master node will listen on port 50000 and the data nodes will listen on port 50001). Then you can start up the data nodes and the master node (IN THAT ORDER!)
 
 On the data nodes:
-> python3 sqlfat/py/datanode.py localhost 50001
+	- python3 sqlfat/py/datanode.py localhost 50001
 
 On the master node:
-> python3 sqlfat/py/master.py localhost 50000 sqlfat/etc/config
+	- python3 sqlfat/py/master.py localhost 50000 sqlfat/etc/config
 
 You can then use the client module to connect to the database via python (see below for documentation) or you can connect as a client to the database via a shell interface.
 
