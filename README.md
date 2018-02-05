@@ -25,13 +25,10 @@ Then
 
 In the case that you do not have your own cluster of machines you can try out sqlfat with a Dockerized cluster provided in this package. The cluster is built on top of the centos official docker image. To stand up the cluster enter the following commands.
 
-> cd simulation
-
-> chmod a+x cluster
-
-> ./cluster build
-
-> ./cluster start
+	- cd simulation
+	- chmod a+x cluster
+	- ./cluster build
+	- ./cluster start
 
 To stop the cluster (and remove the containers)
 
