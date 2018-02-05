@@ -53,4 +53,4 @@ Otherwise SQL statements can be entered directly. For now the statements must be
 
 As noted before, this is a single-master multi-worker architecture, where the master functions as a controller for the entire cluster. Though the machine running the master node could also run a data node it is not necessary.
 
-![](https://raw.githubusercontent.com/gonzodeveloper/stock-comparison/master/img/structure.png)
+![](https://raw.githubusercontent.com/gonzodeveloper/sqlfat/master/img/structure.png)
