@@ -54,3 +54,16 @@ Otherwise SQL statements can be entered directly. For now the statements must be
 As noted before, this is a single-master multi-worker architecture, where the master functions as a controller for the entire cluster. Though the machine running the master node could also run a data node it is not necessary.
 
 ![](https://raw.githubusercontent.com/gonzodeveloper/sqlfat/master/img/struct.png)
+
+Because the datanodes are multi-threaded to handle several connections, one could actually run a master on each giving us a multi-master cluster, however the catalog db (see below) would have to be manually
+copied to each machine, as there is currently no function for automatic replication across masters.
+
+**Catalog** 
+
+The master node also maintains a catalog database which holds metadata on all tables across the cluster. It contains information on which nodes are storing the specific partitions of each table. For now the catalog cannot be directly queried by the client, rather it is simply used by the master in order to organize queries and establish execution plans.
+
+**Config**
+
+The configuration file for the cluster resides in the "etc" directory and it contains information on all the addresses and port numbers of all data nodes. For backward compatability, each entry for the config file must also contain the database drivers used for each node, though this information is not touched by the sqlfat system. In future configurations we can will also store the address information on each master node so we can run remote catalog updates.
+
+**Transactions
