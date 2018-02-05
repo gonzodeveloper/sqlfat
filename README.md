@@ -44,4 +44,13 @@ Once installation is complete we can connect to our cluster with the client.
 	chmod a+x sqlfat
 	./sqlfat 200.0.0.10
 
-Similar to SQLite we can enter commands prefixed by an underscore. For instance **_use** will specify which database to use. **_quit** will quit the client. Otherwise SQL statements can be entered directly.
+Similar to SQLite we can enter commands prefixed by an underscore. For instance **_use** will specify which database to use. **_quit** will quit the client. 
+
+Otherwise SQL statements can be entered directly. For now the statements must be entered in one line, and do not need to be terminated with a semicolon. In the next version this should be fixed ad the interface should work in a more traditional fashion. 
+
+
+### Technical Details
+
+As noted before, this is a single-master multi-worker architecture, where the master functions as a controller for the entire cluster. Though the machine running the master node could also run a data node it is not necessary.
+
+![](https://raw.githubusercontent.com/gonzodeveloper/stock-comparison/master/img/structure.png)
