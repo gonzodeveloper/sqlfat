@@ -1,7 +1,8 @@
 FROM centos
 MAINTAINER kylehart@hawaii.edu
 
-RUN yum update -y \
+RUN yum clean all \
+    && yum update -y \
     && yum install yum-utils -y \
     && yum groupinstall development -y 
 
