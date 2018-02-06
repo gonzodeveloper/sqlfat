@@ -1,5 +1,5 @@
 catalog.driver=com.ibm.db2.jcc.DB2Driver
-catalog.hostname=200.0.0.10:50000
+catalog.hostname=200.0.0.10:50001
 
 numnodes=3
 
