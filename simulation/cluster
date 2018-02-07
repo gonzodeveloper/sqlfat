@@ -21,14 +21,11 @@ elif [ "$action" == "start" ]; then
     docker run -d -i --name master --hostname master --network db_net --ip 200.0.0.10 server
     docker run -d -i --name node1 --hostname node1 --network db_net --ip 200.0.0.11 server
     docker run -d -i --name node2 --hostname node2 --network db_net --ip 200.0.0.12 server
-    docker run -d -i --name node3 --hostname node3 --network db_net --ip 200.0.0.13 server
     
     docker exec -i node1 python3.6 sqlfat/py/datanode.py node1 50001 &
     echo "Node1 up..."
     docker exec -i node2 python3.6 sqlfat/py/datanode.py node2 50001 &
     echo "Node2 up..."
-    docker exec -i node3 python3.6 sqlfat/py/datanode.py node3 50001 &
-    echo "Node3 up..."
     docker exec -i master python3.6 sqlfat/py/master.py master 50000 sqlfat/etc/config &
     echo "Master up..."
     
