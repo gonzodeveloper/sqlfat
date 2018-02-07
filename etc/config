@@ -8,5 +8,3 @@ node1.hostname=200.0.0.11:50001
 
 node2.driver=com.ibm.db2.jcc.DB2Driver
 node2.hostname=200.0.0.12:50001
-
-
