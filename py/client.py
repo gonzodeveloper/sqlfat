@@ -39,8 +39,8 @@ class Client:
         :return: status message from master node
         '''
         self.sock.send("_quit".encode())
-        response =  self.sock.recv(1024).decode()
-        return response
+        # response =  self.sock.recv(1024).decode()
+        return "Quit"
 
     def transaction(self, statement):
         '''

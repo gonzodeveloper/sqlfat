@@ -2,7 +2,7 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/.idea/db_parallel_ddl.iml" filepath="$PROJECT_DIR$/.idea/db_parallel_ddl.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/db_sqlfat.iml" filepath="$PROJECT_DIR$/.idea/db_sqlfat.iml" />
     </modules>
   </component>
 </project>
