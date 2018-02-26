@@ -1,6 +1,9 @@
 # sqlfat
 ## Python + ANTLR + SQLite = Fully Parallel DBMS 
 
+
+## UNDER MAINTAINENCE
+
 SQLFat a fully parallel database built on top of SQLite using the socket and multithreading modules within Python 3. For now SQLFat is built with a single-master multi-worker architecture. While the master handles client connections, parses SQL, builds a Query Execution Plan (QEP) and maintains ACID transaction properties, the workers (data nodes) maintain the database in SQLite db files according to the partitioning and repication scheme determined by the master.
 
 ### Installation
