@@ -83,7 +83,8 @@ class SQLFatListener2(SQLFatListener):
                           "clauses": {
                               "table": self.enterTableName(ctx.tableName()),
                               "definitions":  self.enterCreateDefinitions(ctx.createDefinitions()),
-                              "partition": {"function": self.enterPartitionDefinitions(ctx.partitionDefinitions(), "function"),
+                              "partition": {"column": self.enterPartitionDefinitions(ctx.partitionDefinitions(), "column"),
+                                            "function": self.enterPartitionDefinitions(ctx.partitionDefinitions(), "function"),
                                             "values": self.enterPartitionDefinitions(ctx.partitionDefinitions(), "values"),
                                             "number": self.enterPartitionDefinitions(ctx.partitionDefinitions(), "number")
                                            }
@@ -142,20 +143,30 @@ class SQLFatListener2(SQLFatListener):
                 return "None"
         elif clause is "values":
             if isinstance(ctx.partitionFunctionDefinition(), SQLFatParser.PartitionFunctionHashContext):
-                return self.enterPartitionFunctionHash(ctx.partitionFunctionDefinition())
+                return self.enterPartitionFunctionHash(ctx.partitionFunctionDefinition(), "values")
             elif isinstance(ctx.partitionFunctionDefinition(), SQLFatParser.PartitionFunctionRangeContext):
-                return self.enterPartitionFunctionRange(ctx.partitionFunctionDefinition())
+                return self.enterPartitionFunctionRange(ctx.partitionFunctionDefinition(), "values")
             else:
                 return "None"
         elif clause is "number":
             return ctx.count.getText()
+        elif clause is "column":
+            if isinstance(ctx.partitionFunctionDefinition(), SQLFatParser.PartitionFunctionHashContext):
+                return self.enterPartitionFunctionHash(ctx.partitionFunctionDefinition(), "column")
+            elif isinstance(ctx.partitionFunctionDefinition(), SQLFatParser.PartitionFunctionRangeContext):
+                return self.enterPartitionFunctionRange(ctx.partitionFunctionDefinition(), "column")
 
-    def enterPartitionFunctionHash(self, ctx:SQLFatParser.PartitionFunctionHashContext):
-        return ctx.func.getText()
+    def enterPartitionFunctionHash(self, ctx:SQLFatParser.PartitionFunctionHashContext, clause=None):
+        if clause is "values":
+            return ctx.func.getText()
+        if clause is "column":
+            return ctx.expression(0).getText()
 
-    def enterPartitionFunctionRange(self, ctx:SQLFatParser.PartitionFunctionRangeContext):
-        return {"low": ctx.low.getText(), "high": ctx.high.getText()}
-
+    def enterPartitionFunctionRange(self, ctx:SQLFatParser.PartitionFunctionRangeContext, clause= None):
+        if clause is "values":
+            return {"low": ctx.low.getText(), "high": ctx.high.getText()}
+        if clause is "column":
+            return ctx.expression(0).getText()
     def enterInsertStatement(self, ctx:SQLFatParser.InsertStatementContext):
         self.statement = {"type": "INSERT",
                           "clauses": {
