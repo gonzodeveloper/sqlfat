@@ -135,7 +135,7 @@ class DataNode:
 
 
 if __name__ == '__main__':
-    usage = "python3 datanode.py [host] [port]"
+    usage = "python3 datanode.bin [host] [port]"
     if len(sys.argv) != 3:
         print(usage)
         exit(1)

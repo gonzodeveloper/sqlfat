@@ -192,7 +192,6 @@ class Master:
         for nodes in self.datanodes:
             nodes.send(message.encode())
 
-
     def recieve_input(self, conn, BUFFER_SIZE = 1024):
         '''
         Wrapper function for recieving input. Ensures we do not exceed given buffer size.
@@ -211,7 +210,7 @@ class Master:
 
 
 if __name__ == '__main__':
-    usage = "python3 master.py [host] [port] [config file]"
+    usage = "python3 master.bin [host] [port] [config file]"
     if len(sys.argv) != 4:
         print(usage)
         exit(1)

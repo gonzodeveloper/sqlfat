@@ -122,7 +122,7 @@ class SQLFatListener2(SQLFatListener):
         return {"datatype": ctx.dataType().getText(), "constraint": constraint_txt}
 
     def enterConstraintDeclaration(self, ctx:SQLFatParser.ConstraintDeclarationContext):
-        constraint =  {"type": "constraint"}
+        constraint = {"type": "constraint"}
         if isinstance(ctx.tableConstraint(), SQLFatParser.PrimaryKeyTableConstraintContext):
             constraint = {**constraint, **self.enterPrimaryKeyTableConstraint(ctx.tableConstraint())}
         return constraint

@@ -9,14 +9,15 @@
 
 import sys
 import readline
+from bin.client import Client
+import re
 
 usage = "sqlfat [host] [port]"
 if len(sys.argv) < 2:
     print(usage)
     exit(1)
 
-from py.client import Client
-import re
+
 
 print("Welcome to SQLfat, a parallel database management system built around SQLite")
 
