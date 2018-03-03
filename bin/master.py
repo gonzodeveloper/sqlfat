@@ -66,10 +66,9 @@ class Master:
             print('Bind failed.' + str(sys.exc_info()))
             exit(1)
 
-        # Get a list containing socket connections to all datanodes
+        # Get a list containing socket connections to all datanodes, and list or addresses to all masters
         self.datanodes = []
         self.masters_addrs = []
-        self.masters = []
         for hosts in lines[5:]:
             sock = socket.socket()
             sock.connect((hosts, self.data_port))
@@ -78,6 +77,7 @@ class Master:
             if hosts != self.host:
                 self.masters_addrs.append(hosts)
 
+        self.masters = []
         # Get a utility tool for parsing sql and managing catalog
         self.utility = DbUtils(self.datanodes)
 
@@ -144,16 +144,25 @@ class Master:
 
             elif self.utility.statement_type() == "INSERT":
                 statements = self.utility.get_node_strings()
-                response = self.ddl(statements)
+                commit, response = self.ddl(statements)
+                if commit:
+                    self.transact("_commit")
+                    response += "Transaction committed"
+                else:
+                    self.transact("_abort")
+                    response += "Transaction aborted"
 
             elif self.utility.statement_type() == "CREATE TABLE":
                 statements = self.utility.get_node_strings()
-                response = self.ddl(statements)
-                if "Committed" in response:
+                commit, response = self.ddl(statements)
+                if commit:
+                    self.transact("_commit")
                     meta = self.utility.enter_table_data()
                     for nodes in self.masters:
-                        message = '_enter ' + meta
+                        message = '_enter/' + meta
                         nodes.send(message.encode())
+                else:
+                    self.transact("_abort")
 
             elif self.utility.statement_type() == "USE":
                 self.utility.set_db()
@@ -167,12 +176,6 @@ class Master:
                 response = "Quitting Database"
                 client_active = False
 
-            # Upon _ddl we execute a 2-phase commit and send results back to client
-            elif "_ddl/" in orders:
-                transaction = re.sub("_ddl/", "", orders)
-                response = self.ddl(transaction)
-                if response == "Committed":
-                    self.utility.enter_table_data()
             conn.send(response.encode())
 
     def master_thread(self, conn):
@@ -180,6 +183,12 @@ class Master:
         response = ""
         while master_active:
             orders = self.recieve_input(conn)
+            if '_meta/' in orders:
+                meta = re.sub("_enter/", "", orders)
+                self.utility.enter_table_meta_str(meta)
+            elif '_quit' in orders:
+                conn.close()
+                master_active = False
 
     def use(self, database):
         '''
@@ -219,13 +228,12 @@ class Master:
             nodes.close()
         return "Closing connection"
 
-    def ddl(self, statement, catalog):
+    def ddl(self, statement):
         '''
         Multithreaded 2-phase commit for parallel datanodes.
         Sends ddl statement to each node for execution, nodes report back success or failure.
         If all initial execution is successful, we order a commit on all nodes, otherwise order an abort
         :param statement: ddl statement
-        :param catalog: sqlite3 db connection to catalog, holds meta data on nodes and tables
         :return: status string which can be sent back to client
         '''
         message = "_ddl/" + statement
@@ -247,26 +255,8 @@ class Master:
                     commit = False
                 elif "_success" in future.result():
                     response += "Transaction success at host: " + host + "\n"
-        # If all nodes succeeded in prep send phase 2 commit message, otherwise order all to abort
-        for nodes in self.datanodes:
-            if commit == True:
-                self.transact("_commit")
-                # Successful table writes are written to catalog
-                if "CREATE TABLE" in statement:
-                    table = re.split(" ", statement)[2]
-                    (host, port) = nodes.getpeername()
-                    id = int(re.sub("200.0.0.1", "", str(host)))
-                    catalog.execute("INSERT INTO dtables (tname, nodeurl, nodeid) "
-                                    "VALUES (\"{}\", \"{}\", {})".format(table, host, id))
-                    catalog.commit()
-            else:
-                self.transact("_abort")
-        # Update status string
-        if commit == True:
-            response += "Committed"
-        else:
-            response += "Aborted"
-        return response
+
+        return commit, response
 
     def transact(self, status):
         '''
