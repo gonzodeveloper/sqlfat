@@ -1,7 +1,11 @@
 grammar SQLFat;
 
 sqlStatement
-    : ddlStatement | dmlStatement // | transactionStatement
+    : ddlStatement | dmlStatement | utilityStatement // | transactionStatement
+;
+
+utilityStatement
+    : useStatement
 ;
 
 ddlStatement
@@ -34,7 +38,11 @@ transactionStatement
 ;
 */
 
+// Utility Stuff
 
+useStatement
+    : USE DATABASE? uid
+;
 
 // DML Stuff
 
@@ -613,6 +621,7 @@ TRUE        :       'TRUE';
 UNION       :       'UNION';
 UNIQUE      :       'UNIQUE';
 UPDATE      :       'UPDATE';
+USE         :       'USE';
 USING       :       'USING';
 VALUE       :       'VALUE';
 VALUES      :       'VALUES';

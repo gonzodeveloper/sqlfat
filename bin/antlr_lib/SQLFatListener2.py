@@ -205,6 +205,10 @@ class SQLFatListener2(SQLFatListener):
         else:
             pass
 
+    def enterUseStatement(self, ctx:SQLFatParser.UseStatementContext):
+        self.statement = {"type": "USE",
+                          "name": ctx.uid().getText()}
+
     def enterCreateDatabase(self, ctx:SQLFatParser.CreateDatabaseContext):
         self.statement = {"type": "CREATE DATABASE",
                           "name": ctx.uid().getText()}

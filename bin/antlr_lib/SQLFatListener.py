@@ -17,6 +17,15 @@ class SQLFatListener(ParseTreeListener):
         pass
 
 
+    # Enter a parse tree produced by SQLFatParser#utilityStatement.
+    def enterUtilityStatement(self, ctx:SQLFatParser.UtilityStatementContext):
+        pass
+
+    # Exit a parse tree produced by SQLFatParser#utilityStatement.
+    def exitUtilityStatement(self, ctx:SQLFatParser.UtilityStatementContext):
+        pass
+
+
     # Enter a parse tree produced by SQLFatParser#ddlStatement.
     def enterDdlStatement(self, ctx:SQLFatParser.DdlStatementContext):
         pass
@@ -32,6 +41,15 @@ class SQLFatListener(ParseTreeListener):
 
     # Exit a parse tree produced by SQLFatParser#dmlStatement.
     def exitDmlStatement(self, ctx:SQLFatParser.DmlStatementContext):
+        pass
+
+
+    # Enter a parse tree produced by SQLFatParser#useStatement.
+    def enterUseStatement(self, ctx:SQLFatParser.UseStatementContext):
+        pass
+
+    # Exit a parse tree produced by SQLFatParser#useStatement.
+    def exitUseStatement(self, ctx:SQLFatParser.UseStatementContext):
         pass
 
 

@@ -5,12 +5,14 @@
 # File: master.py
 # Description: a masternode for the sqlfat parallel database.
 
+from .utility import DbUtils
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from threading import Thread
 import socket
 import re
 import sys
 import traceback
+import pickle
 import sqlite3
 
 
@@ -24,61 +26,89 @@ class Master:
     across the datanodes.
     '''
 
-    def __init__(self, host, port, config):
+    def __init__(self, host, config):
         '''
         Initialize master node with a socket to listen for client connections.
         Read config file to find addresses of datanodes and establish connection.
         :param host: ip address or hostname of master node (should be local)
-        :param port: port to listen for client connections
         :param config: configuration file
         '''
-        # IP and port to listen for client connections
+
+        # Parsing the config file for nodes' addresses and port numbers
+        with open(config) as file:
+            read_data = file.read()
+        lines = re.split('\n', read_data)
+
+        # REGEX
+        port_pattern = re.compile('\d{1,5}')
+
+        # Get host names and ports
         self.host = host
-        self.port = int(port)
+        self.client_port = int(re.search(port_pattern, lines[0])[0])
+        self.master_port = int(re.search(port_pattern, lines[1])[0])
+        self.data_port = int(re.search(port_pattern, lines[2])[0])
 
         # Create socket for client connections
-        self.sock = socket.socket()
-        self.sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        self.client_sock = socket.socket()
+        self.client_sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         try:
-            self.sock.bind((self.host, self.port))
+            self.client_sock.bind((self.host, self.client_port))
         except socket.error:
             print('Bind failed.' + str(sys.exc_info()))
             exit(1)
 
-        # Parsing the config file for nodes' addresses
-        with open(config) as file:
-            read_data = file.read()
-        read_data = re.split('\n\n', read_data)
-
-        ip_pattern = re.compile('\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}')
-        addr_pattern = re.compile('\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}:\d{1,5}')
-
-        node_addr = re.search(addr_pattern, read_data[0])[0]
-        node_port = int(re.split(":", node_addr)[1])
+        # Create socket for master connections
+        self.master_sock = socket.socket()
+        self.master_sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        try:
+            self.master_sock.bind((self.host, self.master_port))
+        except socket.error:
+            print('Bind failed.' + str(sys.exc_info()))
+            exit(1)
 
         # Get a list containing socket connections to all datanodes
         self.datanodes = []
-        for lines in read_data[2:]:
-            ip = re.search(ip_pattern, lines)[0]
+        self.masters_addrs = []
+        self.masters = []
+        for hosts in lines[5:]:
             sock = socket.socket()
-            sock.connect((ip, node_port))
-            print("Connected to : " + ip + ":" + str(node_port))
+            sock.connect((hosts, self.data_port))
+            print("Connected to Datanode: " + hosts + ":" + str(self.data_port))
             self.datanodes.append(sock)
+            if hosts != self.host:
+                self.masters_addrs.append(hosts)
 
-    def listen(self):
+        # Get a utility tool for parsing sql and managing catalog
+        self.utility = DbUtils(self.datanodes)
+
+    def client_listen(self):
         '''
         Listen for client connections on the client socket.
         With each new connection create a new thread to handle exchange, and allow for more connections
         :return:
         '''
-        self.sock.listen(5)
+        self.client_sock.listen(5)
         while True:
-            conn, addr = self.sock.accept()
-            print("Server: Connection from " + str(addr))
+            conn, addr = self.client_sock.accept()
+            print("Server: Connection from clinet: " + str(addr))
             conn.settimeout(300)
             # Give each connected client a new thread
             try:
                 Thread(target=self.client_thread, args=(conn,)).start()
+            except:
+                print("Multiprocessing Error! ")
+                traceback.print_exc()
+
+    def master_listen(self):
+
+        self.master_sock.listen(5)
+        while True:
+            conn, addr = self.master_sock.accept()
+            print("Connection from " + str(addr))
+            conn.settimeout(300)
+            # Give each connected client a new thread
+            try:
+                Thread(target=self.master_thread, args=(conn,)).start()
             except:
                 print("Multiprocessing Error! ")
                 traceback.print_exc()
@@ -91,25 +121,65 @@ class Master:
         :param conn: socket connection to client
         :return:
         '''
+        # Connect to other masters
+        for hosts in self.masters_addrs:
+            sock = socket.socket()
+            sock.connect((hosts, self.master_port))
+            print("Connected to Master: " + hosts + ":" + str(self.master_port))
+            self.masters.append(sock)
+
         client_active = True
-        catalog = sqlite3.connect("/sqlfat/data/catalog.db")
         response = ""
         # Loop waiting for client's message (i.e., orders) then act accordingly
         while client_active:
             orders = self.recieve_input(conn)
-            # Upon _quit we close connection to catalog and end client thread
-            if "_quit" in orders:
-                catalog.close()
-                client_active = False
-            # Upon _use we tell datanodes to use given db
-            elif "_use/" in orders:
-                db = re.sub("_use/", "", orders)
+            try:
+                self.utility.parse(orders)
+            except SyntaxError:
+                response = "SYNTAX ERROR IN STATEMENT: " + orders
+
+            if self.utility.statement_type() == "SELECT":
+                statements = self.utility.get_node_strings()
+                response = self.select(statements)
+
+            elif self.utility.statement_type() == "INSERT":
+                statements = self.utility.get_node_strings()
+                response = self.ddl(statements)
+
+            elif self.utility.statement_type() == "CREATE TABLE":
+                statements = self.utility.get_node_strings()
+                response = self.ddl(statements)
+                if "Committed" in response:
+                    meta = self.utility.enter_table_data()
+                    for nodes in self.masters:
+                        message = '_enter ' + meta
+                        nodes.send(message.encode())
+
+            elif self.utility.statement_type() == "USE":
+                self.utility.set_db()
+                db = self.utility.get_db()
                 response = self.use(db)
+
+            elif self.utility.statement_type() == "LOAD":
+                pass
+
+            elif self.utility.statement_type() == "QUIT":
+                response = "Quitting Database"
+                client_active = False
+
             # Upon _ddl we execute a 2-phase commit and send results back to client
             elif "_ddl/" in orders:
                 transaction = re.sub("_ddl/", "", orders)
-                response = self.ddl(transaction, catalog)
+                response = self.ddl(transaction)
+                if response == "Committed":
+                    self.utility.enter_table_data()
             conn.send(response.encode())
+
+    def master_thread(self, conn):
+        master_active = True
+        response = ""
+        while master_active:
+            orders = self.recieve_input(conn)
 
     def use(self, database):
         '''
@@ -121,6 +191,22 @@ class Master:
         for nodes in self.datanodes:
             nodes.send(message.encode())
         return "Using database: " + database
+
+    def select(self, statements):
+        data = []
+        # Create a thread pool to handle each of the datanode's queries concurrently
+        with ThreadPoolExecutor(max_workers=len(self.datanodes)) as executor:
+            # Tell nodes to prep transaction
+            for idx, nodes in enumerate(self.datanodes):
+                message = "_query/" + statements[idx]
+                nodes.send(message.encode())
+            # Get responses
+            futures = [executor.submit(self.recieve_input, nodes) for nodes in self.datanodes]
+            # Check commit status for each node, log into status string
+            for future in as_completed(futures):
+                for rows in future.result():
+                    data.append(rows)
+        return "Query Returned {} rows".format(len(data))
 
     def quit(self):
         '''
@@ -205,7 +291,7 @@ class Master:
         if input_size > BUFFER_SIZE:
             print("Input exceeds buffer size")
 
-        result = client_input.decode().rstrip()
+        result = pickle.loads(client_input)
         return result
 
 

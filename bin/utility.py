@@ -16,6 +16,7 @@ class DbUtils:
         self.node_count = len(nodes)
         self.catalog = sqlite3.connect('bin/catalog/catalog.db')
         self.statement = None
+        self.current_db = None
 
     def parse(self, sql):
         """
@@ -24,6 +25,11 @@ class DbUtils:
         :param sql: sql string
         :return: N/A
         """
+        # If we receive a quit order immediately set type and don't bother with parse
+        if sql == "_quit":
+            self.statement = {'type': 'QUIT'}
+            return self.statement
+
         # Get all the tools to create an antlr parse tree
         input_steam = InputStream(sql)
         lexer = SQLFatLexer(input_steam)
@@ -62,8 +68,15 @@ class DbUtils:
             return self._nodes_insert()
         elif sql_type == "CREATE TABLE":
             return self._nodes_create_table()
+        elif sql_type == "USE":
+            pass
         else:
             return None
+    def set_db(self):
+        self.current_db = self.statement['name']
+
+    def get_db(self):
+        return self.current_db
 
     def statement_type(self):
         """
@@ -78,6 +91,7 @@ class DbUtils:
         Only call if parsed statement was CREATE TABLE. Inserts the table's meta data into the catalog db.
         :return: N/A
         """
+        db = self.current_db
         tname = self.statement['clauses']['table']
         partition = self.statement['clauses']['partition']
         partmtd = partition['function']
@@ -92,17 +106,32 @@ class DbUtils:
         else:
             partcol = partparam1 = partparam2 = 'NULL'
 
-        insert = "INSERT INTO table_meta (tname, partmtd, partcol, partparam1, partparam2) " \
-                 "VALUES (\"{}\", \"{}\", \"{}\", \"{}\", \"{}\")".format(tname, partmtd, partcol, partparam1, partparam2)
+        vals = [db, tname, partmtd, partcol, partparam1, partparam2]
+        row = '"{0}"'.format('", "'.join(vals))
+
+        insert = "INSERT INTO table_meta (db, tname, partmtd, partcol, partparam1, partparam2) " \
+                 "VALUES ({})".format(row)
         curs = self.catalog.cursor()
         curs.execute(insert)
-
+        self.catalog.commit()
+        '''    
         for keys, defs in self.statement['clauses']['definitions'].items():
             if defs['type'] == 'col':
                 insert = "INSERT INTO column_meta (cname, tname, datatype, constraints) " \
                          "VALUES (\"{}\", \"{}\", \"{}\", \"{}\")".format(defs['name'], tname, defs['datatype'], defs['constraint'])
                 curs.execute(insert)
         self.catalog.commit()
+        '''
+        return row
+
+    def enter_table_meta_str(self, rowstr):
+
+        insert = "INSERT INTO table_meta (tname, partmtd, partcol, partparam1, partparam2) " \
+                 "VALUES ({})".format(rowstr)
+        curs = self.catalog.cursor()
+        curs.execute(insert)
+        self.catalog.commit()
+
 
     def _nodes_select(self):
         """
