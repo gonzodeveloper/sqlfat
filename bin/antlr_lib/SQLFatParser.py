@@ -172,7 +172,7 @@ def serializedATN():
         buf.write("\u00b6\3\2\2\2\u00b8\u00b7\3\2\2\2\u00b9\t\3\2\2\2\u00ba")
         buf.write("\u00bc\7i\2\2\u00bb\u00bd\7\37\2\2\u00bc\u00bb\3\2\2\2")
         buf.write("\u00bc\u00bd\3\2\2\2\u00bd\u00be\3\2\2\2\u00be\u00bf\5")
-        buf.write("\u0098M\2\u00bf\13\3\2\2\2\u00c0\u00ec\5\16\b\2\u00c1")
+        buf.write("\u0092J\2\u00bf\13\3\2\2\2\u00c0\u00ec\5\16\b\2\u00c1")
         buf.write("\u00ec\5\20\t\2\u00c2\u00c4\5\24\13\2\u00c3\u00c5\5\26")
         buf.write("\f\2\u00c4\u00c3\3\2\2\2\u00c5\u00c6\3\2\2\2\u00c6\u00c4")
         buf.write("\3\2\2\2\u00c6\u00c7\3\2\2\2\u00c7\u00d0\3\2\2\2\u00c8")
@@ -1279,8 +1279,8 @@ class SQLFatParser ( Parser ):
         def USE(self):
             return self.getToken(SQLFatParser.USE, 0)
 
-        def uid(self):
-            return self.getTypedRuleContext(SQLFatParser.UidContext,0)
+        def fullId(self):
+            return self.getTypedRuleContext(SQLFatParser.FullIdContext,0)
 
 
         def DATABASE(self):
@@ -1318,7 +1318,7 @@ class SQLFatParser ( Parser ):
 
 
             self.state = 188
-            self.uid()
+            self.fullId()
         except RecognitionException as re:
             localctx.exception = re
             self._errHandler.reportError(self, re)

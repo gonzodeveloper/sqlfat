@@ -41,7 +41,7 @@ transactionStatement
 // Utility Stuff
 
 useStatement
-    : USE DATABASE? uid
+    : USE DATABASE? fullId
 ;
 
 // DML Stuff
