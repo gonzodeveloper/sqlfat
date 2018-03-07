@@ -14,6 +14,7 @@ import re
 import pickle
 
 
+
 class DataNode:
     '''
     The datanodes are stood up to get a connection from the master node and execute queries and transactions in accordance
@@ -52,7 +53,7 @@ class DataNode:
             conn, addr = self.sock.accept()
             print("Server: Connection from " + str(addr))
             # Times out after an hour
-            conn.settimeout(6000)
+            #conn.settimeout(6000)
             # Once connected, open new thread
             try:
                 Thread(target=self.master_thread, args=(conn,)).start()

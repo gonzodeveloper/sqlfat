@@ -11,7 +11,7 @@ RUN yum install https://centos7.iuscommunity.org/ius-release.rpm -y \
     && yum install epel-release -y \
     && yum install python36u -y \
     && yum install python36u-pip -y \
-    && easy_install-3.6 pip3 \
+    && easy_install-3.6 pip \
     && pip install antlr4-python3-runtime
 
 
