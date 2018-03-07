@@ -16,18 +16,18 @@ if [ "$action" == "build" ]; then
     echo "Creating network"
     docker network create --driver=bridge  --subnet=200.0.0.0/16 db_net
 
-elif [ "$action" == "start" ]; then
+elif [ "$action" == "run" ]; then
     echo "Starting cluster..."
     docker run -d -i --name master --hostname master --network db_net --ip 200.0.0.10 server
     docker run -d -i --name node1 --hostname node1 --network db_net --ip 200.0.0.11 server
     docker run -d -i --name node2 --hostname node2 --network db_net --ip 200.0.0.12 server
     
-    docker exec -i node1 python3.6 sqlfat/py/datanode.py node1 50001 &
-    echo "Node1 up..."
-    docker exec -i node2 python3.6 sqlfat/py/datanode.py node2 50001 &
-    echo "Node2 up..."
-    docker exec -i master python3.6 sqlfat/py/master.py master 50000 sqlfat/etc/config &
-    echo "Master up..."
+    #docker exec -i node1 python3.6 sqlfat/py/datanode.py node1 50001 &
+    #echo "Node1 up..."
+    #docker exec -i node2 python3.6 sqlfat/py/datanode.py node2 50001 &
+    #echo "Node2 up..."
+    #docker exec -i master python3.6 sqlfat/py/master.py master 50000 sqlfat/etc/config &
+    #echo "Master up..."
     
 elif [ "$action" == "stop" ]; then
     echo "Stopping cluster..."

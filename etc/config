@@ -1,6 +1,6 @@
-client_port=5000
-master_port=5001
-data_port=5002
+client_port=50000
+master_port=50001
+data_port=50002
 
 nodes
 200.0.0.10

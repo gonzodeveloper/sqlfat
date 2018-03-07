@@ -5,7 +5,7 @@
 # File: master.py
 # Description: a masternode for the sqlfat parallel database.
 
-from .utility import DbUtils
+from bin.utility import DbUtils
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from threading import Thread
 import socket
