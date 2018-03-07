@@ -14,7 +14,7 @@ class DbUtils:
         """
         self.nodes = nodes
         self.node_count = len(nodes)
-        self.catalog = sqlite3.connect('bin/catalog/catalog.db')
+        self.catalog = sqlite3.connect('sqlfat/bin/catalog/catalog.db')
         self.statement = None
         self.current_db = None
 

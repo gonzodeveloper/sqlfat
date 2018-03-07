@@ -68,7 +68,7 @@ class Master:
         # Get a list containing socket connections to all datanodes, and list or addresses to all masters
         self.datanodes = []
         self.masters_addrs = []
-        for hosts in lines[5:]:
+        for hosts in lines[5:-1]:
             sock = socket.socket()
             sock.connect((hosts, self.data_port))
             print("Connected to Datanode: " + hosts + ":" + str(self.data_port))
