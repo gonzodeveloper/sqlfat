@@ -17,23 +17,26 @@ if len(sys.argv) < 2:
     print(usage)
     exit(1)
 
-
-
 print("Welcome to SQLfat, a parallel database management system built around SQLite")
 
 client = Client(sys.argv[1])
 print("Connected to master node at " + client.host + ":" + str(client.port))
 
 statement = ""
+
 while "_quit" not in statement:
-    statement = input(">>>> ")
+    statement = input("sqlfat > ")
     if "_quit" in statement:
-        print(client.quit())
+        client.quit()
+        print(client.response)
         print("Goodbye!")
         exit(0)
-    elif "_use" in statement:
-        db = re.sub("_use ", "", statement)
-        print(client.use(db))
-    else :
-        print(client.transaction(statement))
+    else:
+        client.execute(statement)
+        if client.data is not None:
+            for rows in client.data:
+                print("\t\t".join(rows))
+        print(client.response)
+
+
 

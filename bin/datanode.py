@@ -11,6 +11,7 @@ import sqlite3
 import sys
 import traceback
 import re
+import pickle
 
 
 class DataNode:
@@ -91,7 +92,7 @@ class DataNode:
                     ddl_statement = re.sub("_ddl/", "", orders)
                     result = self.prep_transaction(database_conn, ddl_statement)
                     print("Prepping transaction: " + ddl_statement)
-                    conn.send(result.encode())
+                    conn.send(pickle.dumps(result))
                     # Wait for masters response
                     action = self.recieve_input(conn)
                     if "_commit" in action:
@@ -115,7 +116,7 @@ class DataNode:
         if input_size > BUFFER_SIZE:
             print("Input exceeds buffer size")
 
-        result = client_input.decode().rstrip()
+        result = pickle.loads(client_input)
         print(result)
         return result
 

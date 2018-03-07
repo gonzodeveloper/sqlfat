@@ -6,6 +6,7 @@
 # Description: client for sqlfat parallel database system
 
 import socket
+import pickle
 
 class Client:
     '''
@@ -23,44 +24,55 @@ class Client:
         self.sock = socket.socket()
         self.sock.connect((host, port))
 
+        self.response = None
+        self.cache = None
+
+    def _recv_response_and_data(self):
+        response = self.sock.recv(1024)
+        data = self.sock.recv(1024)
+        self.response = pickle.loads(response)
+        self.data = pickle.loads(data)
+
     def use(self, db):
         '''
         Tell sqlfat to use the given database. If the given database does not exist then one will be automatically created
         :param db: string, database file name
         :return: status message from master node
         '''
-        message = "_use/" + db
-        self.sock.send(message.encode())
-        return self.sock.recv(1024).decode()
+        message = "USE " + db
+        self.sock.send(pickle.dumps(message))
+        self._recv_response_and_data()
 
     def quit(self):
         '''
         Quit connection with master node sqlfat database
         :return: status message from master node
         '''
-        self.sock.send("_quit".encode())
-        # response =  self.sock.recv(1024).decode()
-        return "Quit"
+        message = "_quit"
+        self.sock.send(pickle.dumps(message))
+        self._recv_response_and_data()
 
-    def transaction(self, statement):
+    def execute(self, statement):
         '''
+        Send SQL statement to sqlfat master node for execution
+        :param statement: sql statement
+        :return: status message from master node
+        '''
+        self.sock.send(pickle.dumps(statement))
+        self._recv_response_and_data()
+
+
+
+    '''    
+    def transaction(self, statement):
+
         Send ddl statement to sqlfat master node for execution
         :param statement: ddl statement
         :return: status message from master node
-        '''
+
         message = "_ddl/" + statement
         self.sock.send(message.encode())
         return self.sock.recv(1024).decode()
-
-    def execute(self, query):
-        '''
-        Send SQL statement to sqlfat master node for execution
-        :param query: sql statement
-        :return: status message from master node
-        '''
-        self.sock.send(query.encode())
-        return self.sock.recv(1024).decode()
-
-
+    '''
 
 

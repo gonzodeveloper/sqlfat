@@ -13,7 +13,6 @@ import re
 import sys
 import traceback
 import pickle
-import sqlite3
 
 
 class Master:
@@ -76,7 +75,7 @@ class Master:
             self.datanodes.append(sock)
             if hosts != self.host:
                 self.masters_addrs.append(hosts)
-
+        # List of connection to other masters
         self.masters = []
         # Get a utility tool for parsing sql and managing catalog
         self.utility = DbUtils(self.datanodes)
@@ -140,7 +139,7 @@ class Master:
 
             if self.utility.statement_type() == "SELECT":
                 statements = self.utility.get_node_strings()
-                response = self.select(statements)
+                response, data = self.select(statements)
 
             elif self.utility.statement_type() == "INSERT":
                 statements = self.utility.get_node_strings()
@@ -151,6 +150,7 @@ class Master:
                 else:
                     self.transact("_abort")
                     response += "Transaction aborted"
+                data = None
 
             elif self.utility.statement_type() == "CREATE TABLE":
                 statements = self.utility.get_node_strings()
@@ -160,23 +160,27 @@ class Master:
                     meta = self.utility.enter_table_data()
                     for nodes in self.masters:
                         message = '_enter/' + meta
-                        nodes.send(message.encode())
+                        nodes.send(pickle.dumps(message))
                 else:
                     self.transact("_abort")
+                data = None
 
             elif self.utility.statement_type() == "USE":
                 self.utility.set_db()
                 db = self.utility.get_db()
                 response = self.use(db)
+                data = None
 
             elif self.utility.statement_type() == "LOAD":
-                pass
+                data = None
 
             elif self.utility.statement_type() == "QUIT":
                 response = "Quitting Database"
                 client_active = False
+                data = None
 
-            conn.send(response.encode())
+            conn.send(pickle.dumps(response))
+            conn.send(pickle.dumps(data))
 
     def master_thread(self, conn):
         master_active = True
@@ -198,7 +202,7 @@ class Master:
         '''
         message = "_use/" + database
         for nodes in self.datanodes:
-            nodes.send(message.encode())
+            nodes.send(pickle.dumps(message))
         return "Using database: " + database
 
     def select(self, statements):
@@ -208,14 +212,16 @@ class Master:
             # Tell nodes to prep transaction
             for idx, nodes in enumerate(self.datanodes):
                 message = "_query/" + statements[idx]
-                nodes.send(message.encode())
+                nodes.send(pickle.dumps(message))
             # Get responses
             futures = [executor.submit(self.recieve_input, nodes) for nodes in self.datanodes]
             # Check commit status for each node, log into status string
             for future in as_completed(futures):
                 for rows in future.result():
                     data.append(rows)
-        return "Query Returned {} rows".format(len(data))
+        response = "Query Returned {} rows".format(len(data))
+        return response, data
+
 
     def quit(self):
         '''
@@ -224,7 +230,7 @@ class Master:
         '''
         message = "_quit"
         for nodes in self.datanodes:
-            nodes.send(message.encode())
+            nodes.send(pickle.dumps(message))
             nodes.close()
         return "Closing connection"
 
@@ -243,7 +249,7 @@ class Master:
         with ThreadPoolExecutor(max_workers=len(self.datanodes)) as executor:
             # Tell nodes to prep transaction
             for nodes in self.datanodes:
-                nodes.send(message.encode())
+                nodes.send(pickle.dumps(message))
             # Get responses
             futures = [executor.submit(self.recieve_input, nodes) for nodes in self.datanodes]
             # Check commit status for each node, log into status string
@@ -266,7 +272,7 @@ class Master:
         '''
         message = status
         for nodes in self.datanodes:
-            nodes.send(message.encode())
+            nodes.send(pickle.dumps(message))
 
     def recieve_input(self, conn, BUFFER_SIZE = 1024):
         '''
@@ -286,10 +292,19 @@ class Master:
 
 
 if __name__ == '__main__':
-    usage = "python3 master.bin [host] [port] [config file]"
-    if len(sys.argv) != 4:
+    usage = "python3 master.py [host] [config file]"
+    if len(sys.argv) != 3:
         print(usage)
         exit(1)
-    master = Master(sys.argv[1], sys.argv[2], sys.argv[3])
+    master = Master(sys.argv[1], sys.argv[2])
     print("Master Up!")
-    master.listen()
+    try:
+        Thread(target=master.master_listen, args=()).start()
+    except:
+        print("Multiprocessing Error! ")
+        traceback.print_exc()
+    try:
+        Thread(target=master.client_listen, args=()).start()
+    except:
+        print("Multiprocessing Error! ")
+        traceback.print_exc()
