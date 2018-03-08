@@ -84,6 +84,7 @@ class DataNode:
                     database_conn.close()
                 db = re.sub("_use/", "", orders)
                 db = "/sqlfat/data/" + db
+                print(db)
                 database_conn = sqlite3.connect(db)
                 print("Using database: " + db)
             # Execute ddl statement
@@ -118,7 +119,6 @@ class DataNode:
             print("Input exceeds buffer size")
 
         result = pickle.loads(client_input)
-        print(result)
         return result
 
     def prep_transaction(self, database_conn, ddl):
