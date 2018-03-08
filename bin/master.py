@@ -134,8 +134,11 @@ class Master:
             orders = self.recieve_input(conn)
             try:
                 self.utility.parse(orders)
+                print(self.utility.statement_type)
             except SyntaxError:
                 response = "SYNTAX ERROR IN STATEMENT: " + orders
+                print(response)
+                continue
 
             if self.utility.statement_type() == "SELECT":
                 statements = self.utility.get_node_strings()
