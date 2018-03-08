@@ -137,7 +137,9 @@ class Master:
                 print(self.utility.statement_type)
             except SyntaxError:
                 response = "SYNTAX ERROR IN STATEMENT: " + orders
-                print(response)
+                data = None
+                conn.send(pickle.dumps(response))
+                conn.send(pickle.dumps(data))
                 continue
 
             if self.utility.statement_type() == "SELECT":
