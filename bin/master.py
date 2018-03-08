@@ -125,7 +125,7 @@ class Master:
             print("Connected to Master: " + hosts + ":" + str(self.master_port))
             self.masters.append(sock)
         # Get a utility for parsing and config table maintenence
-        utility = DbUtils(self.masters)
+        utility = DbUtils(self.datanodes)
 
         client_active = True
         # Loop waiting for client's message (i.e., orders) then act accordingly
@@ -191,7 +191,6 @@ class Master:
 
     def master_thread(self, conn):
         master_active = True
-        response = ""
         while master_active:
             orders = self.recieve_input(conn)
             if '_meta/' in orders:

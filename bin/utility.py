@@ -51,7 +51,6 @@ class DbUtils:
             raise SyntaxError
 
         self.statement = listener.statement
-
         return self.statement
 
     def get_node_strings(self):
