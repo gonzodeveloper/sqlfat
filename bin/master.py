@@ -238,7 +238,7 @@ class Master:
             nodes.close()
         return "Closing connection"
 
-    def ddl(self, statement):
+    def ddl(self, statements):
         '''
         Multithreaded 2-phase commit for parallel datanodes.
         Sends ddl statement to each node for execution, nodes report back success or failure.
@@ -246,14 +246,14 @@ class Master:
         :param statement: ddl statement
         :return: status string which can be sent back to client
         '''
-        message = "_ddl/" + statement
         commit = True
         response = ""
         # Create a thread pool to handle each of the datanode's transactions concurrently
         with ThreadPoolExecutor(max_workers=len(self.datanodes)) as executor:
             # Tell nodes to prep transaction
-            for nodes in self.datanodes:
-                nodes.send(pickle.dumps(message))
+            for idx in enumerate(self.datanodes):
+                message = "_ddl/" + statements[idx]
+                self.datanodes[idx].send(pickle.dumps(message))
             # Get responses
             futures = [executor.submit(self.recieve_input, nodes) for nodes in self.datanodes]
             # Check commit status for each node, log into status string
