@@ -77,8 +77,6 @@ class Master:
                 self.masters_addrs.append(hosts)
         # List of connection to other masters
         self.masters = []
-        # Get a utility tool for parsing sql and managing catalog
-        self.utility = DbUtils(self.datanodes)
 
     def client_listen(self):
         '''
@@ -126,14 +124,15 @@ class Master:
             sock.connect((hosts, self.master_port))
             print("Connected to Master: " + hosts + ":" + str(self.master_port))
             self.masters.append(sock)
+        # Get a utility for parsing and config table maintenence
+        utility = DbUtils(self.masters)
 
         client_active = True
-        response = ""
         # Loop waiting for client's message (i.e., orders) then act accordingly
         while client_active:
             orders = self.recieve_input(conn)
             try:
-                self.utility.parse(orders)
+                utility.parse(orders)
             except SyntaxError:
                 response = "SYNTAX ERROR IN STATEMENT: " + orders
                 data = None
@@ -141,12 +140,12 @@ class Master:
                 conn.send(pickle.dumps(data))
                 continue
 
-            if self.utility.statement_type() == "SELECT":
-                statements = self.utility.get_node_strings()
+            if utility.statement_type() == "SELECT":
+                statements = utility.get_node_strings()
                 response, data = self.select(statements)
 
-            elif self.utility.statement_type() == "INSERT":
-                statements = self.utility.get_node_strings()
+            elif utility.statement_type() == "INSERT":
+                statements = utility.get_node_strings()
                 commit, response = self.ddl(statements)
                 if commit:
                     self.transact("_commit")
@@ -156,12 +155,12 @@ class Master:
                     response += "Transaction aborted"
                 data = None
 
-            elif self.utility.statement_type() == "CREATE TABLE":
-                statements = self.utility.get_node_strings()
+            elif utility.statement_type() == "CREATE TABLE":
+                statements = utility.get_node_strings()
                 commit, response = self.ddl(statements)
                 if commit:
                     self.transact("_commit")
-                    meta = self.utility.enter_table_data()
+                    meta = utility.enter_table_data()
                     for nodes in self.masters:
                         message = '_enter/' + meta
                         nodes.send(pickle.dumps(message))
@@ -169,18 +168,22 @@ class Master:
                     self.transact("_abort")
                 data = None
 
-            elif self.utility.statement_type() == "USE":
-                self.utility.set_db()
-                db = self.utility.get_db()
+            elif utility.statement_type() == "USE":
+                utility.set_db()
+                db = utility.get_db()
                 response = self.use(db)
                 data = None
 
-            elif self.utility.statement_type() == "LOAD":
+            elif utility.statement_type() == "LOAD":
+                response = None
                 data = None
 
-            elif self.utility.statement_type() == "QUIT":
+            elif utility.statement_type() == "QUIT":
                 response = "Quitting Database"
                 client_active = False
+                data = None
+            else:
+                response = None
                 data = None
 
             conn.send(pickle.dumps(response))
