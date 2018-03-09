@@ -1,8 +1,8 @@
 from antlr4 import *
 import sqlite3
-from antlr_lib.SQLFatParser import SQLFatParser
-from antlr_lib.SQLFatLexer import SQLFatLexer
-from antlr_lib.SQLFatListener2 import SQLFatListener2
+from .antlr_lib.SQLFatParser import SQLFatParser
+from .antlr_lib.SQLFatLexer import SQLFatLexer
+from .antlr_lib.SQLFatListener2 import SQLFatListener2
 
 
 class DbUtils:
