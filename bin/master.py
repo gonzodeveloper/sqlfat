@@ -226,7 +226,7 @@ class Master:
                     node.send(pickle.dumps(message))
                     select_nodes.append(node)
             # Get responses
-            futures = [executor.submit(self.recieve_input, nodes) for nodes in select_nodesh]
+            futures = [executor.submit(self.recieve_input, nodes) for nodes in select_nodes]
             # Check commit status for each node, log into status string
             for future in as_completed(futures):
                 for rows in future.result():
