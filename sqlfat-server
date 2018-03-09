@@ -6,7 +6,7 @@ import sys
 from threading import Thread
 
 usage = "sqlfat-server [master|datanode]"
-if len(sys.argv) < 1 or sys.argv not in ["master", "datanode"]:
+if len(sys.argv) < 1 or sys.argv[1] not in ["master", "datanode"]:
     print(usage)
     exit(1)
 

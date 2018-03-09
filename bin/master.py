@@ -13,6 +13,7 @@ import re
 import sys
 import traceback
 import pickle
+import os
 
 
 class Master:
@@ -30,8 +31,10 @@ class Master:
         Initialize master node with a socket to listen for client connections.
         Read config file to find addresses of datanodes and establish connection.
         '''
+        # Get the location of our sqlfat directory
+        sqlfat_home = os.environ['SQLFAT_HOME']
         # We find our config file here
-        config = "../etc/config"
+        config = "{}/etc/config".format(sqlfat_home)
 
         # Parsing the config file for nodes' addresses and port numbers
         with open(config) as file:

@@ -21,6 +21,7 @@ RUN git clone https://github.com/gonzodeveloper/sqlfat \
     && chmod a+x /sqlfat/sqlfat /sqlfat/sqlfat-server
 
 ENV PATH "$PATH:/sqlfat"
+ENV SQLFAT_HOME /sqlfat/
 
 EXPOSE 50000 50001 50002
 

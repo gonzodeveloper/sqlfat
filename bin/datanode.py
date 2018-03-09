@@ -30,8 +30,10 @@ class DataNode:
         '''
         Stand up a datanode with a tcp socket listening for connection from the master node
         '''
+        # Get the location of our sqlfat directory
+        sqlfat_home = os.environ['SQLFAT_HOME']
         # We find our config file here
-        config = "../etc/config"
+        config = "{}/etc/config".format(sqlfat_home)
 
         # Parsing the config file for nodes' addresses and port numbers
         with open(config) as file:
