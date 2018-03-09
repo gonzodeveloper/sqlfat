@@ -251,6 +251,7 @@ class Master:
         commit = True
         response = ""
         recv_count = 0
+        trans_nodes = []
         # Create a thread pool to handle each of the datanode's transactions concurrently
         with ThreadPoolExecutor(max_workers=len(self.datanodes)) as executor:
             # Tell nodes to prep transaction
@@ -258,9 +259,9 @@ class Master:
                 if statements[idx] is not None:
                     message = "_ddl/" + statements[idx]
                     node.send(pickle.dumps(message))
-                    recv_count += 1
+                    trans_nodes.append(node)
             # Get responses
-            futures = [executor.submit(self.recieve_input, nodes) for i in range(recv_count)]
+            futures = [executor.submit(self.recieve_input, nodes) for nodes in trans_nodes]
             # Check commit status for each node, log into status string
             for future in as_completed(futures):
                 result = future.result()
