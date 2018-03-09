@@ -26,14 +26,24 @@ class DataNode:
     concurrently handle multiple connections, this allows for a multi-master architecture.
     '''
 
-    def __init__(self, host, port):
+    def __init__(self):
         '''
         Stand up a datanode with a tcp socket listening for connection from the master node
-        :param host: ip/hostname of datanode
-        :param port: port to listen for connection
         '''
-        self.host = host
-        self.port = int(port)
+        # We find our config file here
+        config = "../etc/config"
+
+        # Parsing the config file for nodes' addresses and port numbers
+        with open(config) as file:
+            read_data = file.read()
+        lines = re.split('\n', read_data)
+
+        # REGEX
+        port_pattern = re.compile('\d{1,5}')
+
+        # Get host names and ports
+        self.host = socket.gethostbyname(socket.gethostname())
+        self.port = int(re.search(port_pattern, lines[2])[0])
 
         # Create socket to listen for master node's connection
         self.sock = socket.socket()
@@ -138,9 +148,3 @@ class DataNode:
 
 if __name__ == '__main__':
     usage = "python3 datanode.bin [host] [port]"
-    if len(sys.argv) != 3:
-        print(usage)
-        exit(1)
-    node = DataNode(sys.argv[1], sys.argv[2])
-    print("Datanode up!")
-    node.listen()

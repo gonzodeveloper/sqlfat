@@ -25,13 +25,13 @@ class Master:
     across the datanodes.
     '''
 
-    def __init__(self, host, config):
+    def __init__(self):
         '''
         Initialize master node with a socket to listen for client connections.
         Read config file to find addresses of datanodes and establish connection.
-        :param host: ip address or hostname of master node (should be local)
-        :param config: configuration file
         '''
+        # We find our config file here
+        config = "../etc/config"
 
         # Parsing the config file for nodes' addresses and port numbers
         with open(config) as file:
@@ -42,7 +42,7 @@ class Master:
         port_pattern = re.compile('\d{1,5}')
 
         # Get host names and ports
-        self.host = host
+        self.host = socket.gethostbyname(socket.gethostname())
         self.client_port = int(re.search(port_pattern, lines[0])[0])
         self.master_port = int(re.search(port_pattern, lines[1])[0])
         self.data_port = int(re.search(port_pattern, lines[2])[0])
@@ -213,14 +213,17 @@ class Master:
 
     def select(self, statements):
         data = []
+        select_nodes = []
         # Create a thread pool to handle each of the datanode's queries concurrently
         with ThreadPoolExecutor(max_workers=len(self.datanodes)) as executor:
             # Tell nodes to prep transaction
-            for idx, nodes in enumerate(self.datanodes):
-                message = "_query/" + statements[idx]
-                nodes.send(pickle.dumps(message))
+            for idx, node in enumerate(self.datanodes):
+                if statements[idx] is not None:
+                    message = "_query/" + statements[idx]
+                    node.send(pickle.dumps(message))
+                    select_nodes.append(node)
             # Get responses
-            futures = [executor.submit(self.recieve_input, nodes) for nodes in self.datanodes]
+            futures = [executor.submit(self.recieve_input, nodes) for nodes in select_nodesh]
             # Check commit status for each node, log into status string
             for future in as_completed(futures):
                 for rows in future.result():
@@ -250,7 +253,6 @@ class Master:
         '''
         commit = True
         response = ""
-        recv_count = 0
         trans_nodes = []
         # Create a thread pool to handle each of the datanode's transactions concurrently
         with ThreadPoolExecutor(max_workers=len(self.datanodes)) as executor:
@@ -302,11 +304,7 @@ class Master:
 
 
 if __name__ == '__main__':
-    usage = "python3 master.py [host] [config file]"
-    if len(sys.argv) != 3:
-        print(usage)
-        exit(1)
-    master = Master(sys.argv[1], sys.argv[2])
+    master = Master()
     print("Master Up!")
     try:
         Thread(target=master.master_listen, args=()).start()
