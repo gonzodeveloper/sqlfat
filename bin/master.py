@@ -127,6 +127,7 @@ class Master:
             sock.connect((hosts, self.master_port))
             print("Connected to Master: " + hosts + ":" + str(self.master_port))
             self.masters.append(sock)
+
         # Get a utility for parsing and config table maintenence
         utility = DbUtils(self.datanodes)
 
@@ -167,6 +168,7 @@ class Master:
                     for nodes in self.masters:
                         message = '_enter/' + meta
                         nodes.send(pickle.dumps(message))
+                        print("sent meta to {}".format(nodes.getpeername()))
                 else:
                     self.transact("_abort")
                 data = None
@@ -194,11 +196,13 @@ class Master:
 
     def master_thread(self, conn):
         master_active = True
+        utility = DbUtils(self.datanodes)
         while master_active:
             orders = self.recieve_input(conn)
-            if '_meta/' in orders:
+            if '_enter/' in orders:
                 meta = re.sub("_enter/", "", orders)
                 self.utility.enter_table_meta_str(meta)
+                print("entered meta")
             elif '_quit' in orders:
                 conn.close()
                 master_active = False
