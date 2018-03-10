@@ -201,7 +201,7 @@ class Master:
             orders = self.recieve_input(conn)
             if '_enter/' in orders:
                 meta = re.sub("_enter/", "", orders)
-                self.utility.enter_table_meta_str(meta)
+                utility.enter_table_meta_str(meta)
                 print("entered meta")
             elif '_quit' in orders:
                 conn.close()
