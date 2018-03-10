@@ -72,6 +72,7 @@ class DbUtils:
             pass
         else:
             return None
+
     def set_db(self):
         self.current_db = self.statement['name']
 
@@ -84,7 +85,6 @@ class DbUtils:
         :return:
         """
         return self.statement['type']
-
 
     def enter_table_data(self):
         """
@@ -126,7 +126,7 @@ class DbUtils:
 
     def enter_table_meta_str(self, rowstr):
 
-        insert = "INSERT INTO table_meta (tname, partmtd, partcol, partparam1, partparam2) " \
+        insert = "INSERT INTO table_meta (db, tname, partmtd, partcol, partparam1, partparam2) " \
                  "VALUES ({})".format(rowstr)
         curs = self.catalog.cursor()
         curs.execute(insert)
