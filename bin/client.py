@@ -28,12 +28,11 @@ class Client:
         self.cache = None
 
     def _recv_response_and_data(self):
-        response = self.sock.recv(1024)
-        print("Client: {}".format(response))
-        data = self.sock.recv(1024)
-        print("Client: {}".format(data))
-        self.response = pickle.loads(response)
-        self.data = pickle.loads(data)
+        result = self.sock.recv(1024)
+        self.response, self.data = pickle.loads(result)
+        print("Client: {}".format(self.response))
+        print("Client: {}".format(self.data))
+
 
     def use(self, db):
         '''

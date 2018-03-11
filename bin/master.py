@@ -193,9 +193,8 @@ class Master:
                 response = None
                 data = None
 
-            conn.send(pickle.dumps(response))
-            print("sent: {} \n to: {}".format(response, conn.getpeername()))
-            conn.send(pickle.dumps(data))
+            conn.send(pickle.dumps((response, data)))
+            print("RESPONSE: {} \nDATA: {}\nTO: {}".format(response, data, conn.getpeername()))
 
     def master_thread(self, conn):
         master_active = True
