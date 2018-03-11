@@ -116,6 +116,12 @@ class DataNode:
                     elif "_abort" in action:
                         database_conn.rollback()
                         print("Aborted Transaction")
+            elif "_query/" in orders:
+                sql = re.sub("_query/", "" orders)
+                curs = database_conn.cursor()
+                curs.execute(sql)
+                rows = [x for x in curs.fetchall()]
+                conn.send(pickle.dumps(rows))
 
     def recieve_input(self, conn, BUFFER_SIZE = 1024):
         '''

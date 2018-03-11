@@ -130,7 +130,6 @@ class Master:
 
         # Get a utility for parsing and config table maintenence
         utility = DbUtils(self.datanodes)
-
         client_active = True
         # Loop waiting for client's message (i.e., orders) then act accordingly
         while client_active:

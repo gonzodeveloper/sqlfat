@@ -29,7 +29,9 @@ class Client:
 
     def _recv_response_and_data(self):
         response = self.sock.recv(1024)
+        print("Client: {}".format(response))
         data = self.sock.recv(1024)
+        print("Client: {}".format(data))
         self.response = pickle.loads(response)
         self.data = pickle.loads(data)
 
