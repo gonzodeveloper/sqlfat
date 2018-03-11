@@ -142,6 +142,7 @@ class Master:
                 data = None
                 conn.send(pickle.dumps(response))
                 conn.send(pickle.dumps(data))
+                print("SENT: {}".format(response))
                 continue
 
             if utility.statement_type() == "SELECT":
@@ -153,7 +154,9 @@ class Master:
                 commit, response = self.ddl(statements)
                 if commit:
                     self.transact("_commit")
+                    print(response)
                     response += "Transaction committed"
+                    print(response)
                 else:
                     self.transact("_abort")
                     response += "Transaction aborted"
@@ -192,6 +195,7 @@ class Master:
                 data = None
 
             conn.send(pickle.dumps(response))
+            print("sent: {} \n to: {}".format(response, conn.getpeername()))
             conn.send(pickle.dumps(data))
 
     def master_thread(self, conn):
@@ -228,6 +232,7 @@ class Master:
                 if statements[idx] is not None:
                     message = "_query/" + statements[idx]
                     node.send(pickle.dumps(message))
+                    print("Sent: {}".format(message))
                     select_nodes.append(node)
             # Get responses
             futures = [executor.submit(self.recieve_input, nodes) for nodes in select_nodes]
@@ -268,6 +273,7 @@ class Master:
                 if statements[idx] is not None:
                     message = "_ddl/" + statements[idx]
                     node.send(pickle.dumps(message))
+                    print("sent: {}".format(message))
                     trans_nodes.append(node)
             # Get responses
             futures = [executor.submit(self.recieve_input, nodes) for nodes in trans_nodes]
@@ -293,6 +299,7 @@ class Master:
         for nodes in self.datanodes:
             nodes.send(pickle.dumps(message))
 
+
     def recieve_input(self, conn, BUFFER_SIZE = 1024):
         '''
         Wrapper function for recieving input. Ensures we do not exceed given buffer size.
@@ -307,6 +314,7 @@ class Master:
             print("Input exceeds buffer size")
 
         result = pickle.loads(client_input)
+        print("Message: {}\n From: {}".format(result, conn.getpeername()))
         return result
 
 

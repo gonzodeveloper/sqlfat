@@ -131,6 +131,7 @@ class DataNode:
             print("Input exceeds buffer size")
 
         result = pickle.loads(client_input)
+        print(result)
         return result
 
     def prep_transaction(self, database_conn, ddl):
