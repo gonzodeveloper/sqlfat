@@ -19,7 +19,7 @@ RUN ln /usr/bin/python3.6 /usr/bin/python3
 # Get SQLFAT packages
 ENV GIT_SSL_NO_VERIFY=true
 RUN git clone https://github.com/gonzodeveloper/sqlfat \
-    && chmod a+x /sqlfat/sqlfat /sqlfat/sqlfat-server
+    && chmod a+x /sqlfat/sqlfat /sqlfat/sqlfat-server /sqlfat/start-cluster
 
 # Environments 
 ENV PATH "$PATH:/sqlfat"
