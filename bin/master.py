@@ -139,8 +139,7 @@ class Master:
             except SyntaxError:
                 response = "SYNTAX ERROR IN STATEMENT: " + orders
                 data = None
-                conn.send(pickle.dumps(response))
-                conn.send(pickle.dumps(data))
+                conn.send(pickle.dumps((response, data))
                 print("SENT: {}".format(response))
                 continue
 
