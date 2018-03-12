@@ -18,9 +18,9 @@ if [ "$action" == "build" ]; then
 
 elif [ "$action" == "run" ]; then
     echo "Starting cluster..."
-    docker run -d -i --name master --hostname master --network db_net --ip 200.0.0.10 server
     docker run -d -i --name node1 --hostname node1 --network db_net --ip 200.0.0.11 server
     docker run -d -i --name node2 --hostname node2 --network db_net --ip 200.0.0.12 server
+    docker run -d -i --name node3 --hostname node3 --network db_net --ip 200.0.0.13 server
     
     #docker exec -i node1 python3.6 sqlfat/py/datanode.py node1 50001 &
     #echo "Node1 up..."
@@ -28,13 +28,25 @@ elif [ "$action" == "run" ]; then
     #echo "Node2 up..."
     #docker exec -i master python3.6 sqlfat/py/master.py master 50000 sqlfat/etc/config &
     #echo "Master up..."
-    
+elif [ "$action" == "bootstrap" ]; then
+    docker exec -it node1 /sbin/sshd >> /dev/null
+    docker exec -it node2 /sbin/sshd >> /dev/null
+    docker exec -it node3 /sbin/sshd >> /dev/null
+    docker exec -it node1 ssh-copy-id -f 200.0.0.11
+    docker exec -it node1 ssh-copy-id -f 200.0.0.12
+    docker exec -it node1 ssh-copy-id -f 200.0.0.13
+    docker exec -it node2 ssh-copy-id -f 200.0.0.11
+    docker exec -it node2 ssh-copy-id -f 200.0.0.12
+    docker exec -it node2 ssh-copy-id -f 200.0.0.13
+    docker exec -it node3 ssh-copy-id -f 200.0.0.11
+    docker exec -it node3 ssh-copy-id -f 200.0.0.12
+    docker exec -it node3 ssh-copy-id -f 200.0.0.13
+
 elif [ "$action" == "stop" ]; then
     echo "Stopping cluster..."
     docker rm node1 --force
     docker rm node2 --force
     docker rm node3 --force
-    docker rm master --force
 fi
 
 

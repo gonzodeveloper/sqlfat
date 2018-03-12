@@ -34,7 +34,7 @@ while "_quit" not in statement:
         client.execute(statement)
         if client.data is not None:
             for rows in client.data:
-                print("\t\t".join(rows))
+                print("\t\t".join([str(x) for x in rows]))
         print(client.response)
 
 

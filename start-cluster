@@ -1,0 +1,16 @@
+#!/bin/bash
+# 
+# Startup script for cluster. must have config file set and passwordless ssh for node
+
+readarray conf < etc/config
+
+len=${#conf[@]}
+hosts=${conf[@]:5:$len}
+
+for ip in $hosts; do
+	ssh $ip sqlfat-server datanode &
+done
+
+for ip in $hosts; do
+	ssh $ip sqlfat-server master &
+done
