@@ -166,12 +166,14 @@ class Master:
                 commit, response = self.ddl(statements)
                 if commit:
                     self.transact("_commit")
+                    response += "Transaction committed"
                     meta = utility.enter_table_data()
                     for nodes in self.masters:
                         order = '_enter'
                         nodes.send(pickle.dumps((order, meta)))
                 else:
                     self.transact("_abort")
+                    response += "Transaction aborted"
                 data = None
 
             elif utility.statement_type() == "USE":
@@ -226,8 +228,9 @@ class Master:
             for idx, node in enumerate(self.datanodes):
                 if statements[idx] is not None:
                     order = "_query"
-                    message = statements[idx]
-                    node.send(pickle.dumps((order, message)))
+                    print(order)
+                    print(statements[idx])
+                    node.send(pickle.dumps((order, statements[idx])))
                     select_nodes.append(node)
             # Get responses
             futures = [executor.submit(self.recieve_input, nodes) for nodes in select_nodes]

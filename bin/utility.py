@@ -133,7 +133,6 @@ class DbUtils:
         curs.execute(insert)
         self.catalog.commit()
 
-
     def _nodes_select(self):
         """
         For the last select statement we need a list of selects to send to each datanode. However the conditionals
