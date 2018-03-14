@@ -119,7 +119,7 @@ class DataNode:
                 rows = [x for x in curs.fetchall()]
                 conn.send(pickle.dumps(rows))
             # Execute a single insert (part of load)
-            elif orders == "_single/":
+            elif orders == "_single":
                 with Lock():
                     # Make sure to lock, but because transaction doesn't involve multiple nodes no need 2 phase commit
                     result = self.prep_transaction(database_conn, message)
@@ -152,9 +152,9 @@ class DataNode:
         curs = database_conn.cursor()
         try:
             curs.execute(ddl)
-            return "_success/",  self.host
+            return "_success",  self.host
         except sqlite3.Error:
-            return "_fail/",  self.host
+            return "_fail",  self.host
 
 
 if __name__ == '__main__':
