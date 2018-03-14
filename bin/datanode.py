@@ -31,9 +31,9 @@ class DataNode:
         Stand up a datanode with a tcp socket listening for connection from the master node
         '''
         # Get the location of our sqlfat directory
-        sqlfat_home = os.environ['SQLFAT_HOME']
+        self.sqlfat_home = os.environ['SQLFAT_HOME']
         # We find our config file here
-        config = "{}/etc/config".format(sqlfat_home)
+        config = self.sqlfat_home + "etc/config"
 
         # Parsing the config file for nodes' addresses and port numbers
         with open(config) as file:
@@ -65,7 +65,7 @@ class DataNode:
             conn, addr = self.sock.accept()
             print("Server: Connection from " + str(addr))
             # Times out after an hour
-            #conn.settimeout(6000)
+            conn.settimeout(6000)
             # Once connected, open new thread
             try:
                 Thread(target=self.master_thread, args=(conn,)).start()
@@ -94,7 +94,7 @@ class DataNode:
             elif orders == "_use":
                 if database_conn is not None:
                     database_conn.close()
-                db = "/sqlfat/data/" + db
+                db = self.sqlfat_home + "data/" + message
                 database_conn = sqlite3.connect(db)
                 print("Using database: " + db)
             # Execute ddl statement

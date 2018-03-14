@@ -34,9 +34,9 @@ class Master:
         Read config file to find addresses of datanodes and establish connection.
         '''
         # Get the location of our sqlfat directory
-        sqlfat_home = os.environ['SQLFAT_HOME']
+        self.sqlfat_home = os.environ['SQLFAT_HOME']
         # We find our config file here
-        config = "{}/etc/config".format(sqlfat_home)
+        config = self.sqlfat_home + "etc/config"
 
         # Parsing the config file for nodes' addresses and port numbers
         with open(config) as file:
@@ -305,7 +305,7 @@ class Master:
                 part_col = utility.partition_col(headers, meta)
                 for row in csv_reader:
                     utility.target_node(row, meta, part_col)
-                    futures.append(executor.submit(self.load_insert, headers, row, meta, part_col))
+                    futures.append(executor.submit(self.load_insert, headers, row, meta))
                 for future in as_completed(futures):
                     status, host = future.result()
                     if status == "_success":
@@ -313,13 +313,15 @@ class Master:
                     else:
                         failures += 1
 
-    def load_insert(self, headers, row, meta, partition_column, node_idx):
+    def load_insert(self, headers, row, meta, node_idx):
         table = meta['tname']
         col_str = ", ".join(headers)
         val_str = ", ".join(row)
         order = "_single"
+        target_node = self.datanodes[node_idx]
         message = "INSERT INTO {} ({}) VALUES ({})".format(table, col_str, val_str)
-        self.datanodes[node_idx].send(pickle.dumps((order, message)))
+        target_node.send(pickle.dumps((order, message)))
+        return self.recieve_input(target_node)
 
     def recieve_input(self, conn, BUFFER_SIZE = 1024):
         '''
