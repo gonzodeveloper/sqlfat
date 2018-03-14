@@ -151,13 +151,13 @@ class Master:
 
             elif utility.statement_type() == "INSERT":
                 statements = utility.get_node_strings()
-                commit, response = self.ddl(statements)
+                commit, response, trans_nodes = self.ddl(statements)
                 if commit:
-                    self.transact("_commit")
+                    self.transact("_commit", trans_nodes)
                     response += "Transaction committed"
                     print(response)
                 else:
-                    self.transact("_abort")
+                    self.transact("_abort", trans_nodes)
                     response += "Transaction aborted"
                 data = None
 
@@ -258,7 +258,7 @@ class Master:
         Multithreaded 2-phase commit for parallel datanodes.
         Sends ddl statement to each node for execution, nodes report back success or failure.
         If all initial execution is successful, we order a commit on all nodes, otherwise order an abort
-        :param statement: ddl statement
+        :param statements: ddl statement
         :return: status string which can be sent back to client
         '''
         commit = True
