@@ -7,6 +7,7 @@
 
 from .utility import DbUtils
 from concurrent.futures import ThreadPoolExecutor, as_completed
+from multiprocessing import cpu_count
 from threading import Thread
 import socket
 import re
@@ -14,6 +15,7 @@ import sys
 import traceback
 import pickle
 import os
+import csv
 
 
 class Master:
@@ -139,7 +141,7 @@ class Master:
             except SyntaxError:
                 response = "SYNTAX ERROR IN STATEMENT: " + orders
                 data = None
-                conn.send(pickle.dumps((response, data))
+                conn.send(pickle.dumps((response, data)))
                 print("SENT: {}".format(response))
                 continue
 
@@ -152,7 +154,6 @@ class Master:
                 commit, response = self.ddl(statements)
                 if commit:
                     self.transact("_commit")
-                    print(response)
                     response += "Transaction committed"
                     print(response)
                 else:
@@ -167,9 +168,8 @@ class Master:
                     self.transact("_commit")
                     meta = utility.enter_table_data()
                     for nodes in self.masters:
-                        message = '_enter/' + meta
-                        nodes.send(pickle.dumps(message))
-                        print("sent meta to {}".format(nodes.getpeername()))
+                        order = '_enter'
+                        nodes.send(pickle.dumps((order, meta)))
                 else:
                     self.transact("_abort")
                 data = None
@@ -199,12 +199,10 @@ class Master:
         master_active = True
         utility = DbUtils(self.datanodes)
         while master_active:
-            orders = self.recieve_input(conn)
-            if '_enter/' in orders:
-                meta = re.sub("_enter/", "", orders)
+            orders, meta = self.recieve_input(conn)
+            if orders == '_enter':
                 utility.enter_table_meta_str(meta)
-                print("entered meta")
-            elif '_quit' in orders:
+            elif orders == "_quit":
                 conn.close()
                 master_active = False
 
@@ -214,9 +212,9 @@ class Master:
         :param database: sqlite db file
         :return: status string which can be sent back to client
         '''
-        message = "_use/" + database
+        order = "_use"
         for nodes in self.datanodes:
-            nodes.send(pickle.dumps(message))
+            nodes.send(pickle.dumps((order, database)))
         return "Using database: " + database
 
     def select(self, statements):
@@ -227,9 +225,9 @@ class Master:
             # Tell nodes to prep transaction
             for idx, node in enumerate(self.datanodes):
                 if statements[idx] is not None:
-                    message = "_query/" + statements[idx]
-                    node.send(pickle.dumps(message))
-                    print("Sent: {}".format(message))
+                    order = "_query"
+                    message = statements[idx]
+                    node.send(pickle.dumps((order, message)))
                     select_nodes.append(node)
             # Get responses
             futures = [executor.submit(self.recieve_input, nodes) for nodes in select_nodes]
@@ -240,15 +238,15 @@ class Master:
         response = "Query Returned {} rows".format(len(data))
         return response, data
 
-
     def quit(self):
         '''
         UNUSED; Close the sockets to our datanodes
         :return: status string which can be sent back to client
         '''
-        message = "_quit"
+        order = "_quit"
+        message = None
         for nodes in self.datanodes:
-            nodes.send(pickle.dumps(message))
+            nodes.send(pickle.dumps((order, message)))
             nodes.close()
         return "Closing connection"
 
@@ -268,20 +266,18 @@ class Master:
             # Tell nodes to prep transaction
             for idx, node in enumerate(self.datanodes):
                 if statements[idx] is not None:
-                    message = "_ddl/" + statements[idx]
-                    node.send(pickle.dumps(message))
-                    print("sent: {}".format(message))
+                    order = "_ddl"
+                    node.send(pickle.dumps((order, statements[idx])))
                     trans_nodes.append(node)
             # Get responses
             futures = [executor.submit(self.recieve_input, nodes) for nodes in trans_nodes]
             # Check commit status for each node, log into status string
             for future in as_completed(futures):
-                result = future.result()
-                host = re.split("/", result)[1]
-                if "_fail" in future.result():
+                status, host = future.result()
+                if status == "_fail":
                     response += "Transaction failure at host: " + host + "\n"
                     commit = False
-                elif "_success" in future.result():
+                elif status == "_success":
                     response += "Transaction success at host: " + host + "\n"
 
         return commit, response
@@ -296,6 +292,34 @@ class Master:
         for nodes in self.datanodes:
             nodes.send(pickle.dumps(message))
 
+    def load(self, file, table, separated_by, enclosed_by):
+        utility = DbUtils(self.datanodes)
+        with ThreadPoolExecutor(max_workers=cpu_count()) as executor:
+            futures = []
+            successes = 0
+            failures = 0
+            with open(file, newline='') as csvfile:
+                csv_reader = csv.reader(csvfile, delimiter=separated_by, quotechar=enclosed_by)
+                headers = next(csv_reader)
+                meta = utility.get_table_meta(table)
+                part_col = utility.partition_col(headers, meta)
+                for row in csv_reader:
+                    utility.target_node(row, meta, part_col)
+                    futures.append(executor.submit(self.load_insert, headers, row, meta, part_col))
+                for future in as_completed(futures):
+                    status, host = future.result()
+                    if status == "_success":
+                        successes += 1
+                    else:
+                        failures += 1
+
+    def load_insert(self, headers, row, meta, partition_column, node_idx):
+        table = meta['tname']
+        col_str = ", ".join(headers)
+        val_str = ", ".join(row)
+        order = "_single"
+        message = "INSERT INTO {} ({}) VALUES ({})".format(table, col_str, val_str)
+        self.datanodes[node_idx].send(pickle.dumps((order, message)))
 
     def recieve_input(self, conn, BUFFER_SIZE = 1024):
         '''

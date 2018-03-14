@@ -53,6 +53,7 @@ class DbUtils:
         self.statement = listener.statement
         return self.statement
 
+
     def get_node_strings(self):
         """
         Return a list of sql strings corresponding to the existing parsed statement and the nodes in the database.
@@ -140,7 +141,7 @@ class DbUtils:
         :return:
         """
         # Get table's meta_dictionary
-        table = self._get_table_meta(self.statement['clauses']['table'])
+        table = self.get_table_meta(self.statement['clauses']['table'])
         statements = [self._proj_tables_to_str()] * self.node_count
         condition = self.statement["clauses"]["conditions"]
         if condition is not None:
@@ -174,7 +175,7 @@ class DbUtils:
         :return:
         '''
         # Get table's meta_dictionary
-        table = self._get_table_meta(self.statement['clauses']['table'])
+        table = self.get_table_meta(self.statement['clauses']['table'])
 
         # Get inset statement prefix
         prefix = "INSERT INTO " + self.statement['clauses']['table'] + " ("
@@ -197,7 +198,7 @@ class DbUtils:
         for row in rows:
             row = [val for key, val in row.items()]
             for idx in range(self.node_count):
-                ins_row = DbUtils._row_for_node(idx, self.node_count, table, row, part_col_idx)
+                ins_row = DbUtils.row_for_node(idx, self.node_count, table, row, part_col_idx)
                 # Add prefix to statements if this is our first insert-able value
                 if insert_flags[idx] is False and ins_row is not None:
                     statements[idx] = prefix
@@ -211,7 +212,7 @@ class DbUtils:
                 statements[idx] = stmnt[:-1]
         return statements
 
-    def _get_table_meta(self, table_name):
+    def get_table_meta(self, table_name):
         """
         Get a dictionary of the meta data for a given table. Including table name, partition method, partition column,
         and the partition parameters
@@ -334,7 +335,7 @@ class DbUtils:
         return sql_str
 
     @staticmethod
-    def _row_for_node(node_idx, node_count, table, row, part_col_idx=None):
+    def row_for_node(node_idx, node_count, table, row, part_col_idx=None):
         """
         Decides if row of data belongs to a given node. Outputs sql string fragment accordingly
         :param node_idx: index of the node in question, int
@@ -357,3 +358,26 @@ class DbUtils:
 
         return row_str
 
+    def partition_col(self, headers, meta):
+        part_col_idx = None
+        for idx, cols in enumerate(headers):
+            if cols == meta['partcol']:
+                part_col_idx = idx
+        return part_col_idx
+
+    def target_node(self, row, meta, partition_column):
+        node_count = self.node_count
+        target_idx = None
+        if meta['partmtd'] == "range":
+            if partition_column is not None:
+                partmin = int(meta['partparam1'])
+                partmax = int(meta['partparam2'])
+                val = int(row[partition_column])
+                target_idx = int(val / ((partmax - partmin) / node_count))
+
+        elif meta['partmtd'] == "hash":
+            if partition_column is not None:
+                val = int(row[partition_column])
+                target_idx = val % node_count
+
+        return target_idx

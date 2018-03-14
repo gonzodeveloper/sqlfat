@@ -86,44 +86,47 @@ class DataNode:
         database_conn = None
         # Wait for orders from the master
         while master_active:
-            orders = self.recieve_input(conn)
-            if "_quit" in orders:
+            orders, message = self.recieve_input(conn)
+            if orders == "_quit":
                 conn.close()
                 master_active = False
             # Get a sqlite connection to the new database, close any other connection that might be open
-            elif "_use/" in orders:
+            elif orders == "_use":
                 if database_conn is not None:
                     database_conn.close()
-                db = re.sub("_use/", "", orders)
                 db = "/sqlfat/data/" + db
-                print(db)
                 database_conn = sqlite3.connect(db)
                 print("Using database: " + db)
             # Execute ddl statement
-            elif "_ddl/" in orders:
+            elif orders == "_ddl":
                 # No other transactions during 2 phase commit
                 with Lock():
-                    ddl_statement = re.sub("_ddl/", "", orders)
-                    result = self.prep_transaction(database_conn, ddl_statement)
-                    print("Prepping transaction: " + ddl_statement)
-                    conn.send(pickle.dumps(result))
+                    status, host = self.prep_transaction(database_conn, message)
+                    print("Prepping transaction: " + message)
+                    conn.send(pickle.dumps((status, host)))
                     # Wait for masters response
                     action = self.recieve_input(conn)
                     if "_commit" in action:
                         database_conn.commit()
                         print("Committed Transaction")
-
                     elif "_abort" in action:
                         database_conn.rollback()
                         print("Aborted Transaction")
-            elif "_query/" in orders:
-                sql = re.sub("_query/", "", orders)
+            # Execute a select statement
+            elif orders == "_query":
                 curs = database_conn.cursor()
-                curs.execute(sql)
+                curs.execute(message)
                 rows = [x for x in curs.fetchall()]
                 conn.send(pickle.dumps(rows))
+            # Execute a single insert (part of load)
+            elif orders == "_single/":
+                with Lock():
+                    # Make sure to lock, but because transaction doesn't involve multiple nodes no need 2 phase commit
+                    result = self.prep_transaction(database_conn, message)
+                    database_conn.commit()
+                    conn.send(pickle.dumps(result))
 
-    def recieve_input(self, conn, BUFFER_SIZE = 1024):
+    def recieve_input(self, conn, BUFFER_SIZE=1024):
         '''
         Wrapper function for recieving input. Ensures we do not exceed given buffer size.
         :param conn: socket connection
@@ -137,7 +140,6 @@ class DataNode:
             print("Input exceeds buffer size")
 
         result = pickle.loads(client_input)
-        print(result)
         return result
 
     def prep_transaction(self, database_conn, ddl):
@@ -150,9 +152,9 @@ class DataNode:
         curs = database_conn.cursor()
         try:
             curs.execute(ddl)
-            return "_success/" + self.host
+            return "_success/",  self.host
         except sqlite3.Error:
-            return "_fail/" + self.host
+            return "_fail/",  self.host
 
 
 if __name__ == '__main__':
