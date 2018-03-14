@@ -163,16 +163,16 @@ class Master:
 
             elif utility.statement_type() == "CREATE TABLE":
                 statements = utility.get_node_strings()
-                commit, response = self.ddl(statements)
+                commit, response, trans_nodes = self.ddl(statements)
                 if commit:
-                    self.transact("_commit")
+                    self.transact("_commit", trans_nodes)
                     response += "Transaction committed"
                     meta = utility.enter_table_data()
                     for nodes in self.masters:
                         order = '_enter'
                         nodes.send(pickle.dumps((order, meta)))
                 else:
-                    self.transact("_abort")
+                    self.transact("_abort", trans_nodes)
                     response += "Transaction aborted"
                 data = None
 
@@ -283,16 +283,16 @@ class Master:
                 elif status == "_success":
                     response += "Transaction success at host: " + host + "\n"
 
-        return commit, response
+        return commit, response, trans_nodes
 
-    def transact(self, status):
+    def transact(self, status, trans_nodes):
         '''
         Order nodes to commit or abort a transaction
         :param status: commit or abort
         :return: None
         '''
         message = status
-        for nodes in self.datanodes:
+        for nodes in trans_nodes:
             nodes.send(pickle.dumps(message))
 
     def load(self, file, table, separated_by, enclosed_by):
