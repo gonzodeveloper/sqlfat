@@ -239,7 +239,7 @@ class Master:
                     node.send(pickle.dumps((order, statements[idx])))
                     select_nodes.append(node)
             # Get responses
-            futures = [executor.submit(self.receive_input, nodes) for nodes in select_nodes]
+            futures = [executor.submit(self.receive_data, nodes) for nodes in select_nodes]
             # Check commit status for each node, log into status string
             for future in as_completed(futures):
                 for rows in future.result():
@@ -279,7 +279,7 @@ class Master:
                     node.send(pickle.dumps((order, statements[idx])))
                     trans_nodes.append(node)
             # Get responses
-            futures = [executor.submit(self.receive_data, nodes) for nodes in trans_nodes]
+            futures = [executor.submit(self.receive_input, nodes) for nodes in trans_nodes]
             # Check commit status for each node, log into status string
             for future in as_completed(futures):
                 status, host = future.result()
@@ -360,7 +360,7 @@ class Master:
         :param BUFFER_SIZE: byte limit for message
         :return: message received
         '''
-        client_input = conn.recv(1024)
+        client_input = conn.recv(BUFFER_SIZE)
         input_size = sys.getsizeof(client_input)
 
         if input_size > BUFFER_SIZE:
