@@ -316,8 +316,8 @@ class Master:
                 meta = utility.get_table_meta(table)
                 part_col = utility.partition_col(headers, meta)
                 for row in csv_reader:
-                    utility.target_node(row, meta, part_col)
-                    results.append(pool.apply_async(self.load_insert, args=(headers, row, meta,)))
+                    node_idx = utility.target_node(row, meta, part_col)
+                    results.append(pool.apply_async(self.load_insert, args=(headers, row, meta, node_idx,)))
                 for r in results:
                     status, host = r.get()
                     if status == "_success":
