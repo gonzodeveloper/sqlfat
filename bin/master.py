@@ -183,7 +183,12 @@ class Master:
                 data = None
 
             elif utility.statement_type() == "LOAD":
-                response = None
+                file = utility.statement['file']
+                table = utility.statement['table']
+                delimiter = utility.statement['delimiter']
+                quotechar = utility.statement['quotechar']
+
+                response = self.load(file, table, delimiter, quotechar)
                 data = None
 
             elif utility.statement_type() == "QUIT":
@@ -295,8 +300,9 @@ class Master:
         for nodes in trans_nodes:
             nodes.send(pickle.dumps(message))
 
-    def load(self, file, table, separated_by, enclosed_by):
+    def load(self, filename, table, separated_by, enclosed_by):
         utility = DbUtils(self.datanodes)
+        file = self.sqlfat_home + "load/" + filename
         with ThreadPoolExecutor(max_workers=cpu_count()) as executor:
             futures = []
             successes = 0
@@ -315,6 +321,7 @@ class Master:
                         successes += 1
                     else:
                         failures += 1
+        return "Successfully inserted {} rows, failed to insert {}".format(successes, failures)
 
     def load_insert(self, headers, row, meta, node_idx):
         table = meta['tname']

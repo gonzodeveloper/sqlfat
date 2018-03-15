@@ -130,22 +130,10 @@ insertStatement
 
 loadDataStatement
     : LOAD DATA
-      LOCAL? INFILE filename=STRING_LITERAL
+      INFILE filename=STRING_LITERAL
       INTO TABLE tableName
-      (PARTITION '(' uidList ')' )?
-      (
-        fieldsFormat=(FIELDS | COLUMNS)
-        selectFieldsInto+
-      )?
-      (
-        LINES
-          selectLinesInto+
-      )?
-      (
-        IGNORE decimalLiteral linesFormat=(LINES | ROWS)
-      )?
-      ( '(' assignmentField (',' assignmentField)* ')' )?
-      (SET updatedElement (',' updatedElement)*)?
+      DELIMITER delimiter=STRING_LITERAL
+      ENCLOSED BY enclosed_by=STRING_LITERAL
 ;
 
 insertStatementValue
@@ -553,6 +541,7 @@ DATETIME    :       'DATETIME';
 DECIMAL     :       'DECIMAL';
 DEFAULT     :       'DEAFAULT';
 DELETE      :       'DELETE';
+DELIMITER   :       'DELIMITER';
 DESC        :       'DESC';
 DISTINCT    :       'DISTINCT';
 DOUBLE      :       'DOUBLE';
@@ -666,6 +655,9 @@ SINGLE_QUOTE_SYMB   :   '\'';
 DOUBLE_QUOTE_SYMB   :   '"';
 REVERSE_QUOTE_SYMB  :   '`';
 COLON_SYMB          :   ':';
+PIPE                :   '|';
+SYMB                :   DOT | COMMA | SEMI | LR_BRACKET | RR_BRACKET | SINGLE_QUOTE_SYMB | DOUBLE_QUOTE_SYMB
+                    | REVERSE_QUOTE_SYMB | SPACE | PIPE ;
 
 fragment DQUOTA_STRING:              '"' ( '\\'. | '""' | ~('"'| '\\') )* '"';
 fragment SQUOTA_STRING: '\'' ('\\'. | '\'\'' | ~('\'' | '\\'))* '\'';

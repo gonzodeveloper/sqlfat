@@ -201,6 +201,12 @@ class SQLFatListener2(SQLFatListener):
             return elements
         else:
             pass
+    def enterLoadDataStatement(self, ctx:SQLFatParser.LoadDataStatementContext):
+        self.statement = {'type': 'LOAD',
+                          'file': ctx.filename.getText(),
+                          'table': ctx.tableName().getText(),
+                          'quotechar': ctx.enclosed_by.getText(),
+                          'delimiter': ctx.delimiter.getText()}
 
     def enterUseStatement(self, ctx:SQLFatParser.UseStatementContext):
         self.statement = {"type": "USE",
