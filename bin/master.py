@@ -7,7 +7,7 @@
 
 from .utility import DbUtils
 from concurrent.futures import ThreadPoolExecutor, as_completed
-from multiprocessing import cpu_count
+from multiprocessing import Pool, cpu_count
 from threading import Thread
 import socket
 import re
@@ -306,8 +306,8 @@ class Master:
         separated_by = ',' if separated_by == "NULL" else separated_by
         enclosed_by = None if enclosed_by == "NULL" else enclosed_by
         file = self.sqlfat_home + "load/" + filename
-        with ThreadPoolExecutor(max_workers=cpu_count()) as executor:
-            futures = []
+        with Pool(processes=cpu_count()) as pool:
+            results = []
             successes = 0
             failures = 0
             with open(file, newline='') as csvfile:
@@ -317,9 +317,9 @@ class Master:
                 part_col = utility.partition_col(headers, meta)
                 for row in csv_reader:
                     utility.target_node(row, meta, part_col)
-                    futures.append(executor.submit(self.load_insert, headers, row, meta))
-                for future in as_completed(futures):
-                    status, host = future.result()
+                    results.append(pool.apply_async(self.load_insert, args=(headers, row, meta,)))
+                for r in results:
+                    status, host = r.get()
                     if status == "_success":
                         successes += 1
                     else:
