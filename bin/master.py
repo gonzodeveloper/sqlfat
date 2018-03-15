@@ -329,7 +329,7 @@ class Master:
     def load_insert(self, headers, row, meta, node_idx):
         table = meta['tname']
         col_str = ", ".join(headers)
-        val_str = ", ".join(row)
+        val_str = ", ".join(['"{}"'.format(x) for x in row])
         order = "_single"
         target_node = self.datanodes[node_idx]
         message = "INSERT INTO {} ({}) VALUES ({})".format(table, col_str, val_str)

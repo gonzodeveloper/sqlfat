@@ -133,7 +133,7 @@ loadDataStatement
       INFILE filename=stringLiteral
       INTO TABLE tableName
       DELIMITER delimiter=uid
-      ENCLOSED BY enclosed_by=uid
+      ENCLOSED BY enclosed_by=uidpy
 ;
 
 insertStatementValue
