@@ -1061,6 +1061,15 @@ class SQLFatListener(ParseTreeListener):
         pass
 
 
+    # Enter a parse tree produced by SQLFatParser#symbol.
+    def enterSymbol(self, ctx:SQLFatParser.SymbolContext):
+        pass
+
+    # Exit a parse tree produced by SQLFatParser#symbol.
+    def exitSymbol(self, ctx:SQLFatParser.SymbolContext):
+        pass
+
+
     # Enter a parse tree produced by SQLFatParser#dataType.
     def enterDataType(self, ctx:SQLFatParser.DataTypeContext):
         pass

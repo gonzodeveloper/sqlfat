@@ -303,6 +303,8 @@ class Master:
 
     def load(self, filename, table, separated_by, enclosed_by):
         utility = DbUtils(self.datanodes)
+        separated_by = ',' if separated_by == "NULL" else separated_by
+        enclosed_by = None if enclosed_by == "NULL" else enclosed_by
         file = self.sqlfat_home + "load/" + filename
         with ThreadPoolExecutor(max_workers=cpu_count()) as executor:
             futures = []
