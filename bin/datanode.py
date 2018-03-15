@@ -13,6 +13,7 @@ import traceback
 import re
 import pickle
 import os
+import struct
 
 
 class DataNode:
@@ -86,7 +87,7 @@ class DataNode:
         database_conn = None
         # Wait for orders from the master
         while master_active:
-            orders, message = self.recieve_input(conn)
+            orders, message = self.receive_input(conn)
             if orders == "_quit":
                 conn.close()
                 master_active = False
@@ -105,7 +106,7 @@ class DataNode:
                     print("Prepping transaction: " + message)
                     conn.send(pickle.dumps((status, host)))
                     # Wait for masters response
-                    action = self.recieve_input(conn)
+                    action = self.receive_input(conn)
                     if "_commit" in action:
                         database_conn.commit()
                         print("Committed Transaction")
@@ -117,7 +118,9 @@ class DataNode:
                 curs = database_conn.cursor()
                 curs.execute(message)
                 rows = [x for x in curs.fetchall()]
-                conn.send(pickle.dumps(rows))
+                self.send_data(conn, pickle.dumps(rows))
+
+
             # Execute a single insert (part of load)
             elif orders == "_single":
                 with Lock():
@@ -126,7 +129,14 @@ class DataNode:
                     database_conn.commit()
                     conn.send(pickle.dumps(result))
 
-    def recieve_input(self, conn, BUFFER_SIZE=1024):
+    def send_data(self, conn, data):
+
+        message = pickle.dumps(data)
+        message = struct.pack('>I', len(message)) + message
+        conn.sendall(message)
+
+
+    def receive_input(self, conn, BUFFER_SIZE=1024):
         '''
         Wrapper function for recieving input. Ensures we do not exceed given buffer size.
         :param conn: socket connection

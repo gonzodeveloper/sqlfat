@@ -16,6 +16,7 @@ import traceback
 import pickle
 import os
 import csv
+import struct
 
 
 class Master:
@@ -135,7 +136,7 @@ class Master:
         client_active = True
         # Loop waiting for client's message (i.e., orders) then act accordingly
         while client_active:
-            orders = self.recieve_input(conn)
+            orders = self.receive_input(conn)
             try:
                 utility.parse(orders)
             except SyntaxError:
@@ -206,7 +207,7 @@ class Master:
         master_active = True
         utility = DbUtils(self.datanodes)
         while master_active:
-            orders, meta = self.recieve_input(conn)
+            orders, meta = self.receive_input(conn)
             if orders == '_enter':
                 utility.enter_table_meta_str(meta)
             elif orders == "_quit":
@@ -238,7 +239,7 @@ class Master:
                     node.send(pickle.dumps((order, statements[idx])))
                     select_nodes.append(node)
             # Get responses
-            futures = [executor.submit(self.recieve_input, nodes) for nodes in select_nodes]
+            futures = [executor.submit(self.receive_input, nodes) for nodes in select_nodes]
             # Check commit status for each node, log into status string
             for future in as_completed(futures):
                 for rows in future.result():
@@ -278,7 +279,7 @@ class Master:
                     node.send(pickle.dumps((order, statements[idx])))
                     trans_nodes.append(node)
             # Get responses
-            futures = [executor.submit(self.recieve_input, nodes) for nodes in trans_nodes]
+            futures = [executor.submit(self.receive_data, nodes) for nodes in trans_nodes]
             # Check commit status for each node, log into status string
             for future in as_completed(futures):
                 status, host = future.result()
@@ -331,16 +332,35 @@ class Master:
         target_node = self.datanodes[node_idx]
         message = "INSERT INTO {} ({}) VALUES ({})".format(table, col_str, val_str)
         target_node.send(pickle.dumps((order, message)))
-        return self.recieve_input(target_node)
+        return self.receive_input(target_node)
 
-    def recieve_input(self, conn, BUFFER_SIZE = 1024):
+    def receive_data(self, conn):
+        # Read message length and unpack it into an integer
+        raw_msglen = self.recvall(conn, 4)
+        if not raw_msglen:
+            return None
+        msglen = struct.unpack('>I', raw_msglen)[0]
+        # Read the message data
+        return self.recvall(conn, msglen)
+
+    def recvall(self, conn, size):
+        # Helper function to recv n bytes or return None if EOF is hit
+        data = b''
+        while len(data) < size:
+            packet = conn.recv(size - len(data))
+            if not packet:
+                return None
+            data += packet
+        return pickle.loads(data)
+
+    def receive_input(self, conn, BUFFER_SIZE = 1024):
         '''
-        Wrapper function for recieving input. Ensures we do not exceed given buffer size.
+        Wrapper function for receiving input. Ensures we do not exceed given buffer size.
         :param conn: socket connection
         :param BUFFER_SIZE: byte limit for message
         :return: message received
         '''
-        client_input = conn.recv(BUFFER_SIZE)
+        client_input = conn.recv(5)
         input_size = sys.getsizeof(client_input)
 
         if input_size > BUFFER_SIZE:
