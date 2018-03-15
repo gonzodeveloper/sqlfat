@@ -32,6 +32,7 @@ while "_quit" not in statement:
         exit(0)
     else:
         client.execute(statement)
+        print()
         if client.data is not None:
             for rows in client.data:
                 print("\t\t".join([str(x) for x in rows]))

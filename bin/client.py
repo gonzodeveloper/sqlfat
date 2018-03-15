@@ -30,9 +30,6 @@ class Client:
     def _recv_response_and_data(self):
         result = self.sock.recv(1024)
         self.response, self.data = pickle.loads(result)
-        print("Client: {}".format(self.response))
-        print("Client: {}".format(self.data))
-
 
     def use(self, db):
         '''

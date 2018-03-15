@@ -360,7 +360,7 @@ class Master:
         :param BUFFER_SIZE: byte limit for message
         :return: message received
         '''
-        client_input = conn.recv(5)
+        client_input = conn.recv(1024)
         input_size = sys.getsizeof(client_input)
 
         if input_size > BUFFER_SIZE:
