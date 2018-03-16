@@ -353,6 +353,7 @@ class Master:
             if not packet:
                 return None
             data += packet
+        print(data)
         return pickle.loads(data)
 
     def receive_input(self, conn, BUFFER_SIZE = 1024):
