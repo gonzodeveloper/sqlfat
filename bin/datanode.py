@@ -118,19 +118,16 @@ class DataNode:
                 curs = database_conn.cursor()
                 curs.execute(message)
                 rows = [x for x in curs.fetchall()]
-                self.send_data(conn, pickle.dumps(rows))
+                self.send_data(conn, rows)
 
-
-            # Execute a single insert (part of load)
+            # Execute a single insert (part of load). Not 2 phase, so no lock required
             elif orders == "_single":
-                with Lock():
-                    # Make sure to lock, but because transaction doesn't involve multiple nodes no need 2 phase commit
-                    result = self.prep_transaction(database_conn, message)
-                    database_conn.commit()
-                    conn.send(pickle.dumps(result))
+                # Make sure to lock, but because transaction doesn't involve multiple nodes no need 2 phase commit
+                result = self.prep_transaction(database_conn, message)
+                database_conn.commit()
+                conn.send(pickle.dumps(result))
 
     def send_data(self, conn, data):
-
         message = pickle.dumps(data)
         message = struct.pack('>I', len(message)) + message
         conn.sendall(message)
