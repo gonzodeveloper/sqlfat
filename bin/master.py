@@ -200,7 +200,7 @@ class Master:
                 response = None
                 data = None
 
-            conn.send(pickle.dumps((response, data)))
+            self.send_data(conn, (response, data))
             print("RESPONSE: {} \nDATA: {}\nTO: {}".format(response, data, conn.getpeername()))
 
     def master_thread(self, conn):
@@ -372,6 +372,10 @@ class Master:
         print("Message: {}\n From: {}".format(result, conn.getpeername()))
         return result
 
+    def send_data(self, conn, data):
+        message = pickle.dumps(data)
+        message = struct.pack('>I', len(message)) + message
+        conn.sendall(message)
 
 if __name__ == '__main__':
     master = Master()

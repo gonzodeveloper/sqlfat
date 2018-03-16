@@ -7,6 +7,7 @@
 
 import socket
 import pickle
+import struct
 
 class Client:
     '''
@@ -27,8 +28,27 @@ class Client:
         self.response = None
         self.cache = None
 
+    def receive_data(self, conn):
+        # Read message length and unpack it into an integer
+        raw_msglen = conn.recv(4)
+        if not raw_msglen:
+            return None
+        msglen = struct.unpack('>I', raw_msglen)[0]
+        # Read the message data
+        return self.recvall(conn, msglen)
+
+    def recvall(self, conn, size):
+        # Helper function to recv n bytes or return None if EOF is hit
+        data = b''
+        while len(data) < size:
+            packet = conn.recv(size - len(data))
+            if not packet:
+                return None
+            data += packet
+        return pickle.loads(data)
+
     def _recv_response_and_data(self):
-        result = self.sock.recv(1024)
+        result = self.receive_data(self.sock)
         self.response, self.data = pickle.loads(result)
 
     def use(self, db):
