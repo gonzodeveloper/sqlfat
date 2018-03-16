@@ -338,7 +338,7 @@ class Master:
 
     def receive_data(self, conn):
         # Read message length and unpack it into an integer
-        raw_msglen = self.recvall(conn, 4)
+        raw_msglen = conn.recv(4)
         if not raw_msglen:
             return None
         msglen = struct.unpack('>I', raw_msglen)[0]
@@ -353,7 +353,6 @@ class Master:
             if not packet:
                 return None
             data += packet
-        print(data)
         return pickle.loads(data)
 
     def receive_input(self, conn, BUFFER_SIZE = 1024):
