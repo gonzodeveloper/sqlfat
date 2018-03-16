@@ -49,7 +49,7 @@ class Client:
 
     def _recv_response_and_data(self):
         result = self.receive_data(self.sock)
-        self.response, self.data = pickle.loads(result)
+        self.response, self.data = result
 
     def use(self, db):
         '''
