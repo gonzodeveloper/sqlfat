@@ -94,7 +94,7 @@ class Master:
         while True:
             conn, addr = self.client_sock.accept()
             print("Server: Connection from clinet: " + str(addr))
-            conn.settimeout(300)
+            conn.settimeout(6000)
             # Give each connected client a new thread
             try:
                 Thread(target=self.client_thread, args=(conn,)).start()
@@ -108,7 +108,7 @@ class Master:
         while True:
             conn, addr = self.master_sock.accept()
             print("Connection from " + str(addr))
-            conn.settimeout(300)
+            conn.settimeout(6000)
             # Give each connected client a new thread
             try:
                 Thread(target=self.master_thread, args=(conn,)).start()
