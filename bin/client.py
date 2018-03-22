@@ -11,7 +11,7 @@ import struct
 
 class Client:
     '''
-    Client is responsible for connecting to the masternode and sending commands as well as sql statements
+    Client is responsible for connecting to the master node and sending commands as well as sql statements
     '''
 
     def __init__(self, host, port=50000):
@@ -48,6 +48,10 @@ class Client:
         return pickle.loads(data)
 
     def _recv_response_and_data(self):
+        """
+        Wait for the master's response and data which we unpack into class variables
+        :return:
+        """
         result = self.receive_data(self.sock)
         self.response, self.data = result
 
@@ -81,16 +85,5 @@ class Client:
 
 
 
-    '''    
-    def transaction(self, statement):
-
-        Send ddl statement to sqlfat master node for execution
-        :param statement: ddl statement
-        :return: status message from master node
-
-        message = "_ddl/" + statement
-        self.sock.send(message.encode())
-        return self.sock.recv(1024).decode()
-    '''
 
 

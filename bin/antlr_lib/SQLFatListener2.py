@@ -6,8 +6,17 @@ else:
     from SQLFatParser import SQLFatParser
 
 
-# This class defines a complete listener for a parse tree produced by SQLFatParser.
 class SQLFatListener2(SQLFatListener):
+    """
+    This is our custom listener that overloads methods defined by ANTLR's automatically generated listener class.
+    This listener is simple. It merely builds a JSON-like dictionary of our parsed SQL statements such that our utility
+    class will have easy access to the various fields. Each SQL statement will be defined by a type, either SELECT,
+    CREATE TABLE, INSERT, LOAD, USE or QUIT (for now). Once this listener has been walked along a parse tree this
+    dictionary can be readily accessed via the statement variable.
+
+    Rather than writing full comments here, it would benefit the user to test this listener on their own. Write a SQL
+    statement, get a parse tree, walk the tree with this listener then look at the listener.statement.
+    """
 
     def __init__(self):
         self.statement = None

@@ -23,13 +23,15 @@ print("Connected to master node at " + client.host + ":" + str(client.port))
 
 statement = ""
 
-while "_quit" not in statement:
+while True:
     statement = input("sqlfat > ")
+    # When quitting me must also tell the client to quit its connection with the master node
     if "_quit" in statement:
         client.quit()
         print(client.response)
         print("Goodbye!")
         exit(0)
+    # Send statement to client, wait for status response. If response contains data then we print it.
     else:
         client.execute(statement)
         print()

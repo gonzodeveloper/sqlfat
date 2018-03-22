@@ -126,7 +126,11 @@ class DbUtils:
         return row
 
     def enter_table_meta_str(self, rowstr):
-
+        """
+        Enter meta data for a newly created table into the local catalog db
+        :param rowstr: list of meta data values
+        :return: NA
+        """
         insert = "INSERT INTO table_meta (db, tname, partmtd, partcol, partparam1, partparam2) " \
                  "VALUES ({})".format(rowstr)
         curs = self.catalog.cursor()
@@ -358,6 +362,12 @@ class DbUtils:
         return row_str
 
     def partition_col(self, headers, meta):
+        """
+        Given a list of column headers for a table, find which one (if any) the table uses as a partition index
+        :param headers: list of column names
+        :param meta: dict formatted meta data for the table
+        :return: index corresponding to column in list that table is partitioned on
+        """
         part_col_idx = None
         for idx, cols in enumerate(headers):
             if cols == meta['partcol']:
@@ -365,6 +375,13 @@ class DbUtils:
         return part_col_idx
 
     def target_node(self, row, meta, partition_column):
+        """
+        Given a row of data determine which datanode it should be entered into.
+        :param row: row data, list
+        :param meta: dict formatted meta data for the table
+        :param partition_column: index of partition column in the row
+        :return:
+        """
         node_count = self.node_count
         target_idx = None
         if meta['partmtd'] == "range":

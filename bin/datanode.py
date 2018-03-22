@@ -76,10 +76,8 @@ class DataNode:
 
     def master_thread(self, conn):
         '''
-        Wait for orders from master: _quit, _use, or _ddl. Respectively these will prompt the datanode to either quit
-        the connection, use a new database, or execute a transactional statement. With the transaction the datanode will
-        try an initial execution and report failure or success back to the master, once the master gets status from all
-        datanodes it will send back a message to either commit or abort that transaction.
+        Wait for the masters orders and message. Upon which we can either quit the connection, start using a database,
+        execute a transaction, query the database, or insert a value from a loaded file
         :param conn: socket connection to the master.
         :return:
         '''
@@ -88,6 +86,7 @@ class DataNode:
         # Wait for orders from the master
         while master_active:
             orders, message = self.receive_input(conn)
+            # Quit connection
             if orders == "_quit":
                 conn.close()
                 master_active = False
@@ -128,6 +127,13 @@ class DataNode:
                 conn.send(pickle.dumps(result))
 
     def send_data(self, conn, data):
+        """
+        Send an arbitrarily large block of data over the socket connection to the master. Used for handing over query
+        results.
+        :param conn: Socket connection to master
+        :param data: data to send
+        :return:
+        """
         message = pickle.dumps(data)
         message = struct.pack('>I', len(message)) + message
         conn.sendall(message)
@@ -166,4 +172,4 @@ class DataNode:
 
 
 if __name__ == '__main__':
-    usage = "python3 datanode.bin [host] [port]"
+    pass

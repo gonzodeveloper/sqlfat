@@ -5,6 +5,12 @@ from bin.datanode import DataNode
 import sys
 from threading import Thread
 
+
+"""
+This script will quickly stand up a datanode or master node on the local host. 
+Keep in mind, before starting any master nodes all datanodes must be up and running.
+"""
+
 usage = "sqlfat-server [master|datanode]"
 if len(sys.argv) < 1 or sys.argv[1] not in ["master", "datanode"]:
     print(usage)
