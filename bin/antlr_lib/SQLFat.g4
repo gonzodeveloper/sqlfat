@@ -6,6 +6,7 @@ sqlStatement
 
 utilityStatement
     : useStatement
+    | explainStatement
 ;
 
 ddlStatement
@@ -42,6 +43,10 @@ transactionStatement
 
 useStatement
     : USE DATABASE? fullId
+;
+
+explainStatement
+    : EXPLAIN fullId
 ;
 
 // DML Stuff
@@ -133,7 +138,7 @@ loadDataStatement
       INFILE filename=stringLiteral
       INTO TABLE tableName
       DELIMITER delimiter=uid
-      ENCLOSED BY enclosed_by=uidpy
+      ENCLOSED BY enclosed_by=uid
 ;
 
 insertStatementValue
@@ -555,6 +560,7 @@ ENCLOSED    :       'ENCLOSED';
 ENUM        :       'ENUM';
 ESCAPED     :       'ESCAPED';
 EXISTS      :       'EXISTS';
+EXPLAIN     :       'EXPLAIN';
 FALSE       :       'FALSE';
 FIELDS      :       'FIELDS';
 FLOAT       :       'FLOAT';

@@ -53,6 +53,15 @@ class SQLFatListener(ParseTreeListener):
         pass
 
 
+    # Enter a parse tree produced by SQLFatParser#explainStatement.
+    def enterExplainStatement(self, ctx:SQLFatParser.ExplainStatementContext):
+        pass
+
+    # Exit a parse tree produced by SQLFatParser#explainStatement.
+    def exitExplainStatement(self, ctx:SQLFatParser.ExplainStatementContext):
+        pass
+
+
     # Enter a parse tree produced by SQLFatParser#simpleSelect.
     def enterSimpleSelect(self, ctx:SQLFatParser.SimpleSelectContext):
         pass

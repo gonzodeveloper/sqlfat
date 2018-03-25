@@ -189,6 +189,14 @@ class Master:
                 response = self.use(db)
                 data = None
 
+            elif utility.statement_type() == "EXPLAIN":
+                table = utility.statement['table']
+                meta = utility.get_table_meta(table)
+                headers = list(meta.keys())
+                vals = list(meta.values())
+                response = "Returned Metadata"
+                data = [headers, vals]
+
             # Load a csv file
             elif utility.statement_type() == "LOAD":
                 file = utility.statement['file']

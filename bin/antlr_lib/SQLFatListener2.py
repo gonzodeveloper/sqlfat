@@ -210,6 +210,12 @@ class SQLFatListener2(SQLFatListener):
             return elements
         else:
             pass
+
+    def enterExplainStatement(self, ctx:SQLFatParser.ExplainStatementContext):
+        self.statement = {'type': 'EXPLAIN',
+                          'table': ctx.fullId().getText()
+                          }
+
     def enterLoadDataStatement(self, ctx:SQLFatParser.LoadDataStatementContext):
         self.statement = {'type': 'LOAD',
                           'file': ctx.filename.getText(),
