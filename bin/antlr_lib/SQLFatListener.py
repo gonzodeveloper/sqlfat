@@ -332,84 +332,30 @@ class SQLFatListener(ParseTreeListener):
         pass
 
 
-    # Enter a parse tree produced by SQLFatParser#tableSources.
-    def enterTableSources(self, ctx:SQLFatParser.TableSourcesContext):
+    # Enter a parse tree produced by SQLFatParser#singleTable.
+    def enterSingleTable(self, ctx:SQLFatParser.SingleTableContext):
         pass
 
-    # Exit a parse tree produced by SQLFatParser#tableSources.
-    def exitTableSources(self, ctx:SQLFatParser.TableSourcesContext):
-        pass
-
-
-    # Enter a parse tree produced by SQLFatParser#tableSourceBase.
-    def enterTableSourceBase(self, ctx:SQLFatParser.TableSourceBaseContext):
-        pass
-
-    # Exit a parse tree produced by SQLFatParser#tableSourceBase.
-    def exitTableSourceBase(self, ctx:SQLFatParser.TableSourceBaseContext):
+    # Exit a parse tree produced by SQLFatParser#singleTable.
+    def exitSingleTable(self, ctx:SQLFatParser.SingleTableContext):
         pass
 
 
-    # Enter a parse tree produced by SQLFatParser#tableSourceNested.
-    def enterTableSourceNested(self, ctx:SQLFatParser.TableSourceNestedContext):
+    # Enter a parse tree produced by SQLFatParser#joinedTable.
+    def enterJoinedTable(self, ctx:SQLFatParser.JoinedTableContext):
         pass
 
-    # Exit a parse tree produced by SQLFatParser#tableSourceNested.
-    def exitTableSourceNested(self, ctx:SQLFatParser.TableSourceNestedContext):
-        pass
-
-
-    # Enter a parse tree produced by SQLFatParser#atomTableItem.
-    def enterAtomTableItem(self, ctx:SQLFatParser.AtomTableItemContext):
-        pass
-
-    # Exit a parse tree produced by SQLFatParser#atomTableItem.
-    def exitAtomTableItem(self, ctx:SQLFatParser.AtomTableItemContext):
+    # Exit a parse tree produced by SQLFatParser#joinedTable.
+    def exitJoinedTable(self, ctx:SQLFatParser.JoinedTableContext):
         pass
 
 
-    # Enter a parse tree produced by SQLFatParser#subqueryTableItem.
-    def enterSubqueryTableItem(self, ctx:SQLFatParser.SubqueryTableItemContext):
+    # Enter a parse tree produced by SQLFatParser#listTables.
+    def enterListTables(self, ctx:SQLFatParser.ListTablesContext):
         pass
 
-    # Exit a parse tree produced by SQLFatParser#subqueryTableItem.
-    def exitSubqueryTableItem(self, ctx:SQLFatParser.SubqueryTableItemContext):
-        pass
-
-
-    # Enter a parse tree produced by SQLFatParser#tableSourcesItem.
-    def enterTableSourcesItem(self, ctx:SQLFatParser.TableSourcesItemContext):
-        pass
-
-    # Exit a parse tree produced by SQLFatParser#tableSourcesItem.
-    def exitTableSourcesItem(self, ctx:SQLFatParser.TableSourcesItemContext):
-        pass
-
-
-    # Enter a parse tree produced by SQLFatParser#innerJoin.
-    def enterInnerJoin(self, ctx:SQLFatParser.InnerJoinContext):
-        pass
-
-    # Exit a parse tree produced by SQLFatParser#innerJoin.
-    def exitInnerJoin(self, ctx:SQLFatParser.InnerJoinContext):
-        pass
-
-
-    # Enter a parse tree produced by SQLFatParser#outerJoin.
-    def enterOuterJoin(self, ctx:SQLFatParser.OuterJoinContext):
-        pass
-
-    # Exit a parse tree produced by SQLFatParser#outerJoin.
-    def exitOuterJoin(self, ctx:SQLFatParser.OuterJoinContext):
-        pass
-
-
-    # Enter a parse tree produced by SQLFatParser#naturalJoin.
-    def enterNaturalJoin(self, ctx:SQLFatParser.NaturalJoinContext):
-        pass
-
-    # Exit a parse tree produced by SQLFatParser#naturalJoin.
-    def exitNaturalJoin(self, ctx:SQLFatParser.NaturalJoinContext):
+    # Exit a parse tree produced by SQLFatParser#listTables.
+    def exitListTables(self, ctx:SQLFatParser.ListTablesContext):
         pass
 
 

@@ -27,7 +27,7 @@ class SQLFatListener2(SQLFatListener):
 
     def enterQuerySpecification(self, ctx:SQLFatParser.QuerySpecificationContext):
         return {"projection": self.enterSelectElements(ctx.selectElements()),
-                "table": self.enterFromClause(ctx.fromClause(), "table"),
+                "source": self.enterFromClause(ctx.fromClause(), "source"),
                 "conditions": self.enterFromClause(ctx.fromClause(), "conditions")}
 
     def enterSelectElements(self, ctx:SQLFatParser.SelectElementsContext):
@@ -41,8 +41,15 @@ class SQLFatListener2(SQLFatListener):
         return ctx.getText()
 
     def enterFromClause(self, ctx:SQLFatParser.FromClauseContext, clause=None):
-        if clause is "table":
-            return self.enterTableSources(ctx.tableSources())
+        if clause is "source":
+            if isinstance(ctx.source, SQLFatParser.SingleTableContext):
+                return self.enterSingleTable(ctx.source)
+            elif isinstance(ctx.source, SQLFatParser.JoinedTableContext):
+                return self.enterJoinedTable(ctx.source)
+            elif isinstance(ctx.source, SQLFatParser.ListTablesContext):
+                return self.enterListTables(ctx.source)
+            else:
+                print('balls')
 
         elif clause is "conditions":
             if isinstance(ctx.whereExpr, SQLFatParser.LogicalExpressionContext):
@@ -56,8 +63,18 @@ class SQLFatListener2(SQLFatListener):
             else:
                 return None
 
-    def enterTableSources(self, ctx:SQLFatParser.TableSourcesContext):
-        return ctx.getText()
+    def enterSingleTable(self, ctx:SQLFatParser.SingleTableContext):
+        return {"tables": [ctx.tableName().getText()],
+                "joined": False}
+
+    def enterJoinedTable(self, ctx:SQLFatParser.JoinedTableContext):
+        print(ctx.tableName())
+        return {"tables": [names.getText() for names in ctx.tableName()],
+                "joined": True}
+
+    def enterListTables(self, ctx:SQLFatParser.ListTablesContext):
+        return {"tables": [names.getText() for names in ctx.tableName()],
+                "joined": True}
 
     def enterLogicalExpression(self, ctx:SQLFatParser.LogicalExpressionContext):
 

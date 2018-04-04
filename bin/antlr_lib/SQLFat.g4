@@ -168,10 +168,10 @@ multipleDeleteStatement
     : DELETE
       (
         tableName ('.' '*')? ( ',' tableName ('.' '*')? )*
-            FROM tableSources
+            FROM tableSource
         | FROM
             tableName ('.' '*')? ( ',' tableName ('.' '*')? )*
-            USING tableSources
+            USING tableSource
       )
       (WHERE expression)?
 ;
@@ -192,7 +192,7 @@ selectLinesInto
 
 
 fromClause
-    : FROM tableSources
+    : FROM source=tableSource
       (WHERE whereExpr=expression)?
       (
         GROUP BY
@@ -221,40 +221,16 @@ groupByItem
 ;
 
 
-tableSources
-    : tableSource (',' tableSource)*
-    ;
+
 
 tableSource
-    : tableSourceItem joinPart*                                     #tableSourceBase
-    | '(' tableSourceItem joinPart* ')'                             #tableSourceNested
+    : tableName                                                     #singleTable
+    | tableName (JOIN tableName ON expression)*                     #joinedTable
+    | tableName (',' tableName)*                                    #listTables
 ;
 
 
-tableSourceItem
-    : tableName
-      (PARTITION '(' uidList ')' )? (AS? alias=uid)?                #atomTableItem
-    | (
-      selectStatement
-      | '(' parenthesisSubquery=selectStatement ')'
-      )
-      AS? alias=uid                                                 #subqueryTableItem
-    | '(' tableSources ')'                                          #tableSourcesItem
-;
 
-joinPart
-    : (INNER | CROSS)? JOIN tableSourceItem
-      (
-        ON expression
-        | USING '(' uidList ')'
-      )?                                                            #innerJoin
-    | (LEFT | RIGHT) OUTER? JOIN tableSourceItem
-        (
-          ON expression
-          | USING '(' uidList ')'
-        )                                                           #outerJoin
-    | NATURAL ((LEFT | RIGHT) OUTER?)? JOIN tableSourceItem         #naturalJoin
-;
 // DDL Stuff
 
 createDatabase

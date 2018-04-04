@@ -143,14 +143,14 @@ class DbUtils:
         will have to be modified according to range partition restrictions if present
         :return:
         """
-        # Get table's meta_dictionary
-        table = self.get_table_meta(self.statement['clauses']['table'])
+        # Get tables' meta_dictionary
+        tables = [self.get_table_meta(names) for names in self.statement['clauses']['source']['tables']]
         statements = [self._proj_tables_to_str()] * self.node_count
         condition = self.statement["clauses"]["conditions"]
         if condition is not None:
             for idx, stmnt in enumerate(statements):
                 statements[idx] = stmnt + \
-                                  "WHERE " + DbUtils._recurse_conditions_to_str(idx, table, self.node_count, condition)
+                                  "WHERE " + DbUtils._recurse_conditions_to_str(idx, tables, self.node_count, condition)
         return statements
 
     def _nodes_create_table(self):
@@ -295,18 +295,20 @@ class DbUtils:
         left = condition['left']
         right = condition['right']
         op = condition['operator']
-        # If we have a range partition and the column is being used, then modify condition for node in question
-        if table['partmtd'] == "range" and table['partcol'] == left:
-            node_range = DbUtils._get_node_range(node_count, node_idx, table['partparam1'], table['partparam2'])
-            if not DbUtils._in_partition(node_range, right, op):
-                return "NULL"
-            else:
-                return left + " " + op + " " + right
-        else:
-            return left + " " + op + " " + right
+        for table in tables:
+            # If we have a range partition and the column is being used, then modify condition for node in question
+            if table['partmtd'] == "range" and table['partcol'] == left:
+                node_range = DbUtils._get_node_range(node_count, node_idx, table['partparam1'], table['partparam2'])
+                if not DbUtils._in_partition(node_range, right, op):
+                    return "NULL"
+                else:
+                    return left + " " + op + " " + right
+
+        # If this column is not range partitioned for any of the tables then return to all
+        return left + " " + op + " " + right
 
     @staticmethod
-    def _recurse_conditions_to_str(node_idx, node_count, table,  condition):
+    def _recurse_conditions_to_str(node_idx, node_count, tables,  condition):
         """
         We can structure any combination of logical conditions as a tree with the binary comparisons as leaves.
         Recurse down the tree, convert everything to sql conditional string, and "trim" any leaves whose comparision
@@ -319,10 +321,10 @@ class DbUtils:
         """
         log_operator = condition['log_operator']
         if log_operator == "IS":
-            return DbUtils._condition_to_str(node_idx, node_count, table, condition['condition_0'])
+            return DbUtils._condition_to_str(node_idx, node_count, tables, condition['condition_0'])
         else:
-            return DbUtils._recurse_conditions_to_str(node_idx, node_count, table, condition['condition_0']) + " " + log_operator + " " + \
-                    DbUtils._recurse_conditions_to_str(node_idx, node_count, table, condition['condition_1'])
+            return DbUtils._recurse_conditions_to_str(node_idx, node_count, tables, condition['condition_0']) + " " + log_operator + " " + \
+                    DbUtils._recurse_conditions_to_str(node_idx, node_count, tables, condition['condition_1'])
 
     def _proj_tables_to_str(self):
         """
@@ -334,8 +336,10 @@ class DbUtils:
             sql_str += vals + ", "
         # Remove last comma from projection columns
         sql_str = sql_str[:-2] + ' '
-        sql_str += "FROM {} ".format(self.statement['clauses']['table'])
+        table_list = ', '.join(self.statement['clauses']['sources']['tables'])
+        sql_str += "FROM " + table_list
         return sql_str
+
 
     @staticmethod
     def row_for_node(node_idx, node_count, table, row, part_col_idx=None):
