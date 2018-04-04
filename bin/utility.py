@@ -357,7 +357,7 @@ class DbUtils:
             value = int(row[part_col_idx])
             if table['partmtd'] == "range":
                 node_min, node_max = DbUtils._get_node_range(node_count, node_idx, table['partparam1'], table['partparam2'])
-                if value not in range(node_min, node_max):
+                if value not in range(node_min, node_max + 1):
                     return None
             elif table['partmtd'] == "hash":
                 if value % node_count != node_idx:
