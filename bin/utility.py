@@ -281,7 +281,7 @@ class DbUtils:
         return int(node_min), int(node_max)
 
     @staticmethod
-    def _condition_to_str(node_idx, table, node_count, condition):
+    def _condition_to_str(node_idx, tables, node_count, condition):
         """
         Given a binary comparison we output a sql string for the given node. If the values being compared are
         outside the given node's partition range, we simply return "NULL" which will keep that datanode from
