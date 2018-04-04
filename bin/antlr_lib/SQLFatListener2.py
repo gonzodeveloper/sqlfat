@@ -190,7 +190,9 @@ class SQLFatListener2(SQLFatListener):
             return {"low": ctx.low.getText(), "high": ctx.high.getText()}
         if clause is "column":
             return ctx.expression(0).getText()
+
     def enterInsertStatement(self, ctx:SQLFatParser.InsertStatementContext):
+        print(ctx.columns.getText())
         self.statement = {"type": "INSERT",
                           "clauses": {
                               "table": self.enterTableName(ctx.tableName()),
@@ -203,16 +205,16 @@ class SQLFatListener2(SQLFatListener):
             return {"subquery" : ctx.selectStatement().getText()}
         else:
             rows = dict()
-            for i in range(2, ctx.getChildCount(), 4):
-                d = {"row_{}".format(int((i-2)/4)): self.enterExpressionsWithDefaults(ctx.getChild(i), cols=True)}
+            for idx, expr in enumerate(ctx.expressionsWithDefaults()):
+                d = {"row_{}".format(idx): self.enterExpressionsWithDefaults(expr, cols=True)}
                 rows = {**rows, **d}
             return rows
 
     def enterExpressionsWithDefaults(self, ctx:SQLFatParser.ExpressionsWithDefaultsContext, cols=False):
         if cols is True:
             elements = dict()
-            for i in range(0, ctx.getChildCount(), 2):
-                d = {"col_{}".format(int(i / 2)): ctx.getChild(i).getText()}
+            for idx, expr in enumerate(ctx.expressionOrDefault()):
+                d = {"col_{}".format(idx): expr.getText()}
                 elements = {**elements, **d}
             return elements
         else:
@@ -221,8 +223,8 @@ class SQLFatListener2(SQLFatListener):
     def enterUidList(self, ctx:SQLFatParser.UidListContext, cols=False):
         if cols is True:
             elements = dict()
-            for i in range(0, ctx.getChildCount(), 2):
-                d = {"col_{}".format(int(i / 2)): ctx.getChild(i).getText()}
+            for idx, uid in enumerate(ctx.uid()):
+                d = {"col_{}".format(idx): uid.getText()}
                 elements = {**elements, **d}
             return elements
         else:
