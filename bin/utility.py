@@ -228,7 +228,6 @@ class DbUtils:
         query = "SELECT tname, partmtd, partcol, partparam1, partparam2, cols " \
                 "FROM table_meta " \
                 "WHERE tname = \"{}\" ".format(table_name)
-        print(query)
         curs = self.catalog.cursor()
         curs.execute(query)
         row = curs.fetchall()[0]

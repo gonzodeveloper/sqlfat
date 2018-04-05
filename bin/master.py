@@ -142,6 +142,7 @@ class Master:
             # Parse the statement given by the client with the utility
             try:
                 utility.parse(orders)
+                print(utility.statement)
             except SyntaxError:
                 response = "SYNTAX ERROR IN STATEMENT: " + orders
                 data = None
@@ -152,12 +153,14 @@ class Master:
             # Execute simple select query
             if utility.statement_type() == "SELECT":
                 statements = utility.get_node_strings()
+                print(statements)
                 response, data = self.select(statements)
+
             # Joined SELECT
-            if utility.statement_type() == "JOINED":
+            elif utility.statement_type() == "JOINED":
                 statement_list = utility.get_node_strings()
                 data = []
-                for statesments in statement_list:
+                for statements in statement_list:
                     response, dat = self.select(statements)
                     data += dat
 
