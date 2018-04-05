@@ -429,6 +429,9 @@ class DbUtils:
         curs = self.temp.cursor()
         for idx, table in enumerate(self.statement['clauses']['source']['tables']):
             meta = self.get_table_meta(table)
+            statement = "DROP TABLE IF EXISTS {}".format(table)
+            curs.execute(statement)
+
             statement = "CREATE TEMP TABLE {} ({})".format(table, meta['cols'])
             print(statement)
             curs.execute(statement)
