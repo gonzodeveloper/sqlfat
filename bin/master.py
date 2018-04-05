@@ -142,7 +142,6 @@ class Master:
             # Parse the statement given by the client with the utility
             try:
                 utility.parse(orders)
-                print(utility.statement)
             except SyntaxError:
                 response = "SYNTAX ERROR IN STATEMENT: " + orders
                 data = None
@@ -153,7 +152,6 @@ class Master:
             # Execute simple select query
             if utility.statement_type() == "SELECT":
                 statements = utility.get_node_strings()
-                print(statements)
                 response, data = self.select(statements)
 
             # Joined SELECT
@@ -174,7 +172,6 @@ class Master:
                 if commit:
                     self.transact("_commit", trans_nodes)
                     response += "Transaction committed"
-                    print(response)
                 else:
                     self.transact("_abort", trans_nodes)
                     response += "Transaction aborted"

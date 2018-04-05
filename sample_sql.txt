@@ -1,0 +1,12 @@
+CREATE TABLE employee (fname VARCHAR NOT NULL, lname VARCHAR NOT NULL, ssn VARCHAR, bdate DATETIME, sex VARCHAR, salary DECIMAL, dno INT) PARTITION BY RANGE(dno, 0, 6) PARTITIONS 3
+
+CREATE TABLE department ( dname VARCHAR NOT NULL, dnumber INT NOT NULL, mgrssn VARCHAR ) PARTITION BY RANGE(dnumber, 0, 6) PARTITIONS 3
+
+CREATE TABLE dept_locations (dnumber INT,dlocation VARCHAR) PARTITION BY HASH(dnumber, modulo) PARTITIONS 3
+
+
+INSERT INTO employee (fname, lname, ssn, bdate, sex, salary, dno) VALUES ("James","Borg","888665555","1927/11/10","M",55000, 5), ("Franklin","Wong","333445555","1945/12/08","M",40000,4), ("Jennifer","Wallace","987654321","1931/6/20","F",43000, 2), ("Jared","James","111111100","1966/10/10","M",85000, 2), ("Alex","Freed","444444400","1950/10/09","M",89000, 3), ("John","James","555555500","1975/6/30","M", 81000, 3), ("Bob", "Dole", "999110022", "1900/02/14","M",9999999,1)
+
+INSERT INTO department (dname, dnumber, mgrssn) VALUES ("Research", 1, "333445555"), ("Administration", 2, "987654321"), ("Headquarters", 3, "888665555"), ("Software",4,"111111100"), ("Hardware",5,"444444400")
+
+INSERT INTO dept_locations VALUES (1,"Houston"), (2, "Houston"), (2,"Stafford"), (3,"Bellaire"), (4,"Sugarland"), (5,"Houston")

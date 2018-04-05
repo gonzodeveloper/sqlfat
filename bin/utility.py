@@ -428,7 +428,7 @@ class DbUtils:
     def create_temp_tables(self, data):
         curs = self.temp.cursor()
         for idx, table in enumerate(self.statement['clauses']['source']['tables']):
-            meta = self.get_table_meta(tables)
+            meta = self.get_table_meta(table)
             statement = "CREATE TEMP TABLE {} ({})".format(table, meta['cols'])
             print(statement)
             curs.execute(statement)

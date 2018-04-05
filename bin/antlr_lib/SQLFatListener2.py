@@ -49,7 +49,7 @@ class SQLFatListener2(SQLFatListener):
             elif isinstance(ctx.source, SQLFatParser.ListTablesContext):
                 return self.enterListTables(ctx.source)
             else:
-                print('balls')
+                return None
 
         elif clause is "conditions":
             if isinstance(ctx.whereExpr, SQLFatParser.LogicalExpressionContext):
@@ -68,7 +68,6 @@ class SQLFatListener2(SQLFatListener):
                 "joined": False}
 
     def enterJoinedTable(self, ctx:SQLFatParser.JoinedTableContext):
-        print(ctx.tableName())
         return {"tables": [names.getText() for names in ctx.tableName()],
                 "joined": True}
 
@@ -192,7 +191,6 @@ class SQLFatListener2(SQLFatListener):
             return ctx.expression(0).getText()
 
     def enterInsertStatement(self, ctx:SQLFatParser.InsertStatementContext):
-        print(ctx.columns.getText())
         self.statement = {"type": "INSERT",
                           "clauses": {
                               "table": self.enterTableName(ctx.tableName()),
