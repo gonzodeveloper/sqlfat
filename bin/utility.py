@@ -226,6 +226,7 @@ class DbUtils:
         :param table_name: name of table, string
         :return: dictionary contianing metadata
         """
+        print(table_name)
         query = "SELECT tname, partmtd, partcol, partparam1, partparam2, cols" \
                 "FROM table_meta " \
                 "WHERE tname = \"{}\" ".format(table_name)
