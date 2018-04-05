@@ -71,6 +71,8 @@ class DbUtils:
             return self._nodes_create_table()
         elif sql_type == "USE":
             pass
+        elif sql_type == "JOINED":
+            return self.get_join_statements()
         else:
             return None
 
@@ -85,6 +87,9 @@ class DbUtils:
         Determine whether the last statement parsed was a CREATE TABLE statement or not
         :return:
         """
+        if self.statement['type'] == "SELECT":
+            if self.statement['clauses']['source']['joined'] is True:
+                return "JOINED"
         return self.statement['type']
 
     def enter_table_data(self):
@@ -107,22 +112,21 @@ class DbUtils:
         else:
             partcol = partparam1 = partparam2 = 'NULL'
 
-        vals = [db, tname, partmtd, partcol, partparam1, partparam2]
+        cols = "["
+        for keys, defs in self.statement['clauses']['definitions'].items():
+            if defs['type'] == 'col':
+                cols += ", " + defs['name']
+        cols += "]"
+
+        vals = [db, tname, partmtd, partcol, partparam1, partparam2, cols]
         row = '"{0}"'.format('", "'.join(vals))
 
-        insert = "INSERT INTO table_meta (db, tname, partmtd, partcol, partparam1, partparam2) " \
+        insert = "INSERT INTO table_meta (db, tname, partmtd, partcol, partparam1, partparam2, cols) " \
                  "VALUES ({})".format(row)
         curs = self.catalog.cursor()
         curs.execute(insert)
         self.catalog.commit()
-        '''    
-        for keys, defs in self.statement['clauses']['definitions'].items():
-            if defs['type'] == 'col':
-                insert = "INSERT INTO column_meta (cname, tname, datatype, constraints) " \
-                         "VALUES (\"{}\", \"{}\", \"{}\", \"{}\")".format(defs['name'], tname, defs['datatype'], defs['constraint'])
-                curs.execute(insert)
-        self.catalog.commit()
-        '''
+
         return row
 
     def enter_table_meta_str(self, rowstr):
@@ -143,14 +147,14 @@ class DbUtils:
         will have to be modified according to range partition restrictions if present
         :return:
         """
-        # Get tables' meta_dictionary
-        tables = [self.get_table_meta(names) for names in self.statement['clauses']['source']['tables']]
+        # Get tables' meta_dictionary (this is for simple select so we simply take the first table
+        table = self.get_table_meta(self.statement['clauses']['source']['tables'][0])
         statements = [self._proj_tables_to_str()] * self.node_count
         condition = self.statement["clauses"]["conditions"]
         if condition is not None:
             for idx, stmnt in enumerate(statements):
                 statements[idx] = stmnt + \
-                                  "WHERE " + DbUtils._recurse_conditions_to_str(idx, tables, self.node_count, condition)
+                                  "WHERE " + DbUtils._recurse_conditions_to_str(idx, table, self.node_count, condition)
         return statements
 
     def _nodes_create_table(self):
@@ -281,7 +285,7 @@ class DbUtils:
         return int(node_min), int(node_max)
 
     @staticmethod
-    def _condition_to_str(node_idx, tables, node_count, condition):
+    def _condition_to_str(node_idx, node_count, table, condition):
         """
         Given a binary comparison we output a sql string for the given node. If the values being compared are
         outside the given node's partition range, we simply return "NULL" which will keep that datanode from
@@ -295,20 +299,22 @@ class DbUtils:
         left = condition['left']
         right = condition['right']
         op = condition['operator']
-        for table in tables:
-            # If we have a range partition and the column is being used, then modify condition for node in question
-            if table['partmtd'] == "range" and table['partcol'] == left:
-                node_range = DbUtils._get_node_range(node_count, node_idx, table['partparam1'], table['partparam2'])
-                if not DbUtils._in_partition(node_range, right, op):
-                    return "NULL"
-                else:
-                    return left + " " + op + " " + right
 
+        if left not in table['cols']:
+            return "1=1"
+
+        # If we have a range partition and the column is being used, then modify condition for node in question
+        if table['partmtd'] == "range" and table['partcol'] == left:
+            node_range = DbUtils._get_node_range(node_count, node_idx, table['partparam1'], table['partparam2'])
+            if not DbUtils._in_partition(node_range, right, op):
+                return "NULL"
+            else:
+                return left + " " + op + " " + right
         # If this column is not range partitioned for any of the tables then return to all
         return left + " " + op + " " + right
 
     @staticmethod
-    def _recurse_conditions_to_str(node_idx, node_count, tables,  condition):
+    def _recurse_conditions_to_str(node_idx, node_count, meta,  condition):
         """
         We can structure any combination of logical conditions as a tree with the binary comparisons as leaves.
         Recurse down the tree, convert everything to sql conditional string, and "trim" any leaves whose comparision
@@ -321,10 +327,10 @@ class DbUtils:
         """
         log_operator = condition['log_operator']
         if log_operator == "IS":
-            return DbUtils._condition_to_str(node_idx, node_count, tables, condition['condition_0'])
+            return DbUtils._condition_to_str(node_idx, node_count, meta, condition['condition_0'])
         else:
-            return DbUtils._recurse_conditions_to_str(node_idx, node_count, tables, condition['condition_0']) + " " + log_operator + " " + \
-                    DbUtils._recurse_conditions_to_str(node_idx, node_count, tables, condition['condition_1'])
+            return DbUtils._recurse_conditions_to_str(node_idx, node_count, meta, condition['condition_0']) + " " + log_operator + " " + \
+                    DbUtils._recurse_conditions_to_str(node_idx, node_count, meta, condition['condition_1'])
 
     def _proj_tables_to_str(self):
         """
@@ -336,8 +342,7 @@ class DbUtils:
             sql_str += vals + ", "
         # Remove last comma from projection columns
         sql_str = sql_str[:-2] + ' '
-        table_list = ', '.join(self.statement['clauses']['source']['tables'])
-        sql_str += "FROM " + table_list + " "
+        sql_str += "FROM " + self.statement['clauses']['source']['tables'][0] + " "
         return sql_str
 
 
@@ -401,3 +406,18 @@ class DbUtils:
                 target_idx = val % node_count
 
         return target_idx
+
+    def get_join_statements(self):
+        statement_list = []
+        for tables in self.statement['clauses']['source']['tables']:
+            meta = self.get_table_meta(tables)
+            t_row = []
+            for idx in range(self.node_count):
+                statement = "SELECT * FROM {} ".format(tables)
+                condition = self.statement["clauses"]["conditions"]
+                if condition is not None:
+                    statement += "WHERE " + DbUtils._recurse_conditions_to_str(idx, self.node_count, meta, condition)
+                t_row.append(statement)
+            statement_list.append(t_row)
+        print(statement_list)
+        return statement_list

@@ -6,7 +6,7 @@ from antlr_lib.SQLFatListener2 import SQLFatListener2
 
 
 
-sql = 'INSERT INTO employee (fname, minit, lname, ssn, bdate, address, sex, salary, dno) VALUES ("James","E","Borg","888665555","1927/11/10","450 Stone, Houston, TX","M",55000, 5)'
+sql = 'CREATE TABLE department ( dname VARCHAR NOT NULL, dnumber INT NOT NULL, mgrssn VARCHAR ) PARTITION BY RANGE(dnumber, 0, 6) PARTITIONS 3'
 input_steam = InputStream(sql)
 lexer = SQLFatLexer(input_steam)
 token_stream = CommonTokenStream(lexer)

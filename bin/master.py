@@ -149,10 +149,17 @@ class Master:
                 print("SENT: {}".format(response))
                 continue
 
-            # Execute select query
+            # Execute simple select query
             if utility.statement_type() == "SELECT":
                 statements = utility.get_node_strings()
                 response, data = self.select(statements)
+            # Joined SELECT
+            if utility.statement_type() == "JOINED":
+                statement_list = utility.get_node_strings()
+                data = []
+                for statesments in statement_list:
+                    response, dat = self.select(statements)
+                    data += dat
 
             # Insert a row of data (2-phase transaction with datanodes)
             elif utility.statement_type() == "INSERT":
