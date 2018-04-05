@@ -198,6 +198,8 @@ class Master:
 
             elif utility.statement_type() == "EXPLAIN":
                 table = utility.statement['table']
+                print(utility.statement)
+                print(table)
                 meta = utility.get_table_meta(table)
                 headers = list(meta.keys())
                 vals = list(meta.values())
