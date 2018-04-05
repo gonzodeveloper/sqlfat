@@ -435,7 +435,7 @@ class DbUtils:
 
             statement = "INSERT INTO {} VALUES ".format(table)
             for rows in data[idx]:
-                row_str = [str(x) for x in rows]
+                row_str = ['"{}"'.format(str(x)) for x in rows]
                 values = ["(" + ", ".join(row_str) + ")"]
             statement += ", ".join(values)
             print(statement)
