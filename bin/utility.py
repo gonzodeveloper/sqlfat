@@ -115,7 +115,7 @@ class DbUtils:
         cols = "["
         for keys, defs in self.statement['clauses']['definitions'].items():
             if defs['type'] == 'col':
-                cols += ", " + defs['name']
+                cols += " " + defs['name']
         cols += "]"
 
         vals = [db, tname, partmtd, partcol, partparam1, partparam2, cols]
@@ -135,7 +135,7 @@ class DbUtils:
         :param rowstr: list of meta data values
         :return: NA
         """
-        insert = "INSERT INTO table_meta (db, tname, partmtd, partcol, partparam1, partparam2) " \
+        insert = "INSERT INTO table_meta (db, tname, partmtd, partcol, partparam1, partparam2, cols) " \
                  "VALUES ({})".format(rowstr)
         curs = self.catalog.cursor()
         curs.execute(insert)
