@@ -337,7 +337,7 @@ class DbUtils:
         # Remove last comma from projection columns
         sql_str = sql_str[:-2] + ' '
         table_list = ', '.join(self.statement['clauses']['source']['tables'])
-        sql_str += "FROM " + table_list
+        sql_str += "FROM " + table_list + " exit"
         return sql_str
 
 

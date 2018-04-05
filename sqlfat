@@ -37,7 +37,8 @@ while True:
         print()
         if client.data is not None:
             for rows in client.data:
-                print("\t\t".join([str(x) for x in rows]))
+                flist = ['{:20}' for x in rows]
+                print("".join(flist).format(*rows))
         print(client.response)
 
 
