@@ -433,7 +433,7 @@ class DbUtils:
             print(statement)
             curs.execute(statement)
 
-            statement = "INSERT INTO {} ({}) VALUES ".format(table, meta['cols'])
+            statement = "INSERT INTO {} VALUES ".format(table)
             for rows in data[idx]:
                 row_str = [str(x) for x in rows]
                 values = ["(" + ", ".join(row_str) + ")"]
