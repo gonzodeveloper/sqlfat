@@ -53,7 +53,6 @@ class DbUtils:
         self.statement = listener.statement
         return self.statement
 
-
     def get_node_strings(self):
         """
         Return a list of sql strings corresponding to the existing parsed statement and the nodes in the database.
@@ -226,10 +225,10 @@ class DbUtils:
         :param table_name: name of table, string
         :return: dictionary contianing metadata
         """
-        print(table_name)
-        query = "SELECT tname, partmtd, partcol, partparam1, partparam2, cols" \
+        query = "SELECT tname, partmtd, partcol, partparam1, partparam2, cols " \
                 "FROM table_meta " \
                 "WHERE tname = \"{}\" ".format(table_name)
+        print(query)
         curs = self.catalog.cursor()
         curs.execute(query)
         row = curs.fetchall()[0]
