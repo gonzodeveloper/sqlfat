@@ -117,6 +117,7 @@ class DataNode:
                 curs = database_conn.cursor()
                 curs.execute(message)
                 rows = [x for x in curs.fetchall()]
+                print(rows)
                 self.send_data(conn, rows)
 
             # Execute a single insert (part of load). Not 2 phase, so no lock required

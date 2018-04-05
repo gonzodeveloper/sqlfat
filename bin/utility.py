@@ -153,7 +153,7 @@ class DbUtils:
         if condition is not None:
             for idx, stmnt in enumerate(statements):
                 statements[idx] = stmnt + \
-                                  "WHERE " + DbUtils._recurse_conditions_to_str(idx, table, self.node_count, condition)
+                                  "WHERE " + DbUtils._recurse_conditions_to_str(idx, self.node_count, table, condition)
         return statements
 
     def _nodes_create_table(self):
@@ -314,7 +314,7 @@ class DbUtils:
         return left + " " + op + " " + right
 
     @staticmethod
-    def _recurse_conditions_to_str(node_idx, node_count, meta,  condition):
+    def _recurse_conditions_to_str(node_idx, node_count, meta, condition):
         """
         We can structure any combination of logical conditions as a tree with the binary comparisons as leaves.
         Recurse down the tree, convert everything to sql conditional string, and "trim" any leaves whose comparision
