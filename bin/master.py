@@ -159,10 +159,13 @@ class Master:
             # Joined SELECT
             elif utility.statement_type() == "JOINED":
                 statement_list = utility.get_node_strings()
-                data = []
+                tdata = []
                 for statements in statement_list:
-                    response, dat = self.select(statements)
-                    data += dat
+                    resp, dat = self.select(statements)
+                    tdata.append(dat)
+                utility.create_temp_tables(tdata)
+                data = utility.query_temp_tables()
+                response = "Returned {} rows".format(str(len(data)))
 
             # Insert a row of data (2-phase transaction with datanodes)
             elif utility.statement_type() == "INSERT":

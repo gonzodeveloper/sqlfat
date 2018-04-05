@@ -17,6 +17,8 @@ class DbUtils:
         self.catalog = sqlite3.connect('sqlfat/bin/catalog/catalog.db')
         self.statement = None
         self.current_db = None
+        self.last_sql = None
+        self.temp = sqlite3.connect('sqlfat/data/temp.db')
 
     def parse(self, sql):
         """
@@ -25,6 +27,8 @@ class DbUtils:
         :param sql: sql string
         :return: N/A
         """
+        self.last_sql = sql
+
         # If we receive a quit order immediately set type and don't bother with parse
         if sql == "_quit":
             self.statement = {'type': 'QUIT'}
@@ -111,11 +115,12 @@ class DbUtils:
         else:
             partcol = partparam1 = partparam2 = 'NULL'
 
-        cols = "["
+        cols_list = []
         for keys, defs in self.statement['clauses']['definitions'].items():
             if defs['type'] == 'col':
-                cols += " " + defs['name']
-        cols += "]"
+                colstr = defs['name'] + " " + defs['datatype']
+                cols_list.append(colstr)
+        cols = " ,".join(cols_list)
 
         vals = [db, tname, partmtd, partcol, partparam1, partparam2, cols]
         row = '"{0}"'.format('", "'.join(vals))
@@ -418,5 +423,24 @@ class DbUtils:
                     statement += "WHERE " + DbUtils._recurse_conditions_to_str(idx, self.node_count, meta, condition)
                 t_row.append(statement)
             statement_list.append(t_row)
-        print(statement_list)
         return statement_list
+
+    def create_temp_tables(self, data):
+        curs = self.temp.cursor()
+        for idx, table in enumerate(self.statement['clauses']['source']['tables']):
+            meta = self.get_table_meta(tables)
+            statement = "CREATE TEMP TABLE {} ({})".format(table, meta['cols'])
+            print(statement)
+            curs.execute(statement)
+
+            statement = "INSERT INTO {} ({}) VALUES ".format(table, meta['cols'])
+            for rows in data[idx]:
+                values = ["(" + ", ".join(rows) + ")"]
+            statement += ", ".join(values)
+            print(statement)
+            curs.execute(statement)
+
+    def query_temp_tables(self):
+        curs = self.temp.cursor()
+        curs.execute(self.last_sql)
+        return [rows for rows in curs.fetchall()]
