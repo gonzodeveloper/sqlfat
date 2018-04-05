@@ -226,14 +226,14 @@ class DbUtils:
         :param table_name: name of table, string
         :return: dictionary contianing metadata
         """
-        query = "SELECT tname, partmtd, partcol, partparam1, partparam2 " \
+        query = "SELECT tname, partmtd, partcol, partparam1, partparam2, cols" \
                 "FROM table_meta " \
                 "WHERE tname = \"{}\" ".format(table_name)
         curs = self.catalog.cursor()
         curs.execute(query)
         row = curs.fetchall()[0]
         return {'tname': row[0], 'partmtd': row[1], 'partcol': row[2],
-                'partparam1': row[3], 'partparam2': row[4]}
+                'partparam1': row[3], 'partparam2': row[4], 'cols': row[5]}
 
     @staticmethod
     def _in_partition(ranges, value, operator):
