@@ -41,6 +41,7 @@ while True:
                 flist = ['{:15}' for x in rows]
                 print("".join(flist).format(*row_str))
         print(client.response)
+        print()
 
 
 
